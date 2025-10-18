@@ -48,8 +48,9 @@ def init_command(project_path: str = ".") -> bool:
         choices=[
             questionary.Choice("GitHub Pages (Free static hosting)", "github"),
             questionary.Choice("Vercel (Serverless deployment)", "vercel"),
-            questionary.Choice("Netlify (JAMstack hosting)", "netlify"),
+            questionary.Choice("Netlify (Platform for web application)", "netlify"),
             questionary.Choice("Railway (Full-stack apps)", "railway"),
+            questionary.Choice("Render (Cloud platform for developers)", "render"),
         ]
     ).ask()
     
@@ -73,6 +74,10 @@ def init_command(project_path: str = ".") -> bool:
             return False
     elif platform == "railway":
         platform_config = _configure_railway(project_path, summary)
+        if platform_config is None:
+            return False
+    elif platform == "render":
+        platform_config = _configure_render(project_path, summary)
         if platform_config is None:
             return False
     
@@ -314,7 +319,24 @@ def _configure_vercel(project_path: str, summary: Dict[str, Any]) -> Optional[Di
     if not _save_platform_token(project_path, "vercel", token_value):
         return None
     
-    return {}
+    # Project name
+    project_name = questionary.text(
+        "Project name (creates projectname.vercel.app):",
+        default=_get_project_name(project_path, summary).lower().replace('_', '-')
+    ).ask()
+    
+    # Root directory for monorepos
+    root_directory = questionary.text(
+        "Root directory (leave empty if project is in root):"
+    ).ask()
+    
+    config = {}
+    if project_name:
+        config["name"] = project_name
+    if root_directory:
+        config["root_directory"] = root_directory
+    
+    return config
 
 def _configure_netlify(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Configure Netlify settings"""
@@ -322,7 +344,7 @@ def _configure_netlify(project_path: str, summary: Dict[str, Any]) -> Optional[D
     
     # Get Netlify token
     token_value = questionary.password(
-        "Enter your Netlify token:"
+        "Enter your Netlify Personal Access Token:"
     ).ask()
     
     if not token_value:
@@ -333,14 +355,29 @@ def _configure_netlify(project_path: str, summary: Dict[str, Any]) -> Optional[D
     if not _save_platform_token(project_path, "netlify", token_value):
         return None
     
-    # Optional site ID
-    site_id = questionary.text(
-        "Site ID (optional, leave empty to create new):"
+    # Site name (optional)
+    site_name = questionary.text(
+        "Site name (optional, leave empty for auto-generated):"
+    ).ask()
+    
+    # Custom domain (optional)
+    custom_domain = questionary.text(
+        "Custom domain (optional):"
+    ).ask()
+    
+    # Auto-deploy on git push
+    auto_deploy = questionary.confirm(
+        "Enable automatic deployments on git push?",
+        default=True
     ).ask()
     
     config = {}
-    if site_id:
-        config["site_id"] = site_id
+    if site_name:
+        config["name"] = site_name
+    if custom_domain:
+        config["domain"] = custom_domain
+    if auto_deploy is not None:
+        config["auto_deploy"] = auto_deploy
     
     return config
 
@@ -350,7 +387,7 @@ def _configure_railway(project_path: str, summary: Dict[str, Any]) -> Optional[D
     
     # Get Railway token
     token_value = questionary.password(
-        "Enter your Railway token:"
+        "Enter your Railway API token:"
     ).ask()
     
     if not token_value:
@@ -361,16 +398,62 @@ def _configure_railway(project_path: str, summary: Dict[str, Any]) -> Optional[D
     if not _save_platform_token(project_path, "railway", token_value):
         return None
     
-    # Optional project ID
-    project_id = questionary.text(
-        "Project ID (optional, leave empty to create new):"
+    # Project name
+    project_name = questionary.text(
+        "Project name:",
+        default=_get_project_name(project_path, summary)
     ).ask()
     
-    config = {}
-    if project_id:
-        config["project_id"] = project_id
+    # Service name
+    service_name = questionary.text(
+        "Service name:",
+        default="web"
+    ).ask()
+    
+    # Application type
+    app_type = questionary.select(
+        "Application type:",
+        choices=[
+            questionary.Choice("Web service (needs port)", "web"),
+            questionary.Choice("Worker (background jobs)", "worker"),
+            questionary.Choice("Cron job (scheduled tasks)", "cron"),
+            questionary.Choice("Static site", "static")
+        ]
+    ).ask()
+    
+    # Start command (for web services)
+    start_command = None
+    if app_type == "web":
+        start_command = questionary.text(
+            "Start command (how to run your app):",
+            default=_get_start_command_suggestion(summary)
+        ).ask()
+    
+    config = {
+        "name": project_name,
+        "service": service_name,
+        "type": app_type
+    }
+    
+    if start_command:
+        config["start_command"] = start_command
     
     return config
+
+def _get_start_command_suggestion(summary: Dict[str, Any]) -> str:
+    """Suggest start command based on project type"""
+    project_type = summary.get('type', '')
+    
+    suggestions = {
+        'django': 'python manage.py runserver 0.0.0.0:$PORT',
+        'flask': 'python app.py',
+        'fastapi': 'uvicorn main:app --host 0.0.0.0 --port $PORT',
+        'nodejs': 'npm start',
+        'react': 'npm start',
+        'nextjs': 'npm start'
+    }
+    
+    return suggestions.get(project_type, 'npm start')
 
 def _save_platform_token(project_path: str, platform: str, token: str) -> bool:
     """Save platform token to file"""
@@ -402,6 +485,80 @@ def _save_platform_token(project_path: str, platform: str, token: str) -> bool:
     except Exception as e:
         error(f"Failed to save token: {str(e)}")
         return False
+
+def _configure_render(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Configure Render settings"""
+    info("⚙️  Configuring Render...")
+    
+    # Get Render API Key
+    token_value = questionary.password(
+        "Enter your Render API Key:"
+    ).ask()
+    
+    if not token_value:
+        error("API Key required for Render deployment")
+        return None
+    
+    # Save token
+    if not _save_platform_token(project_path, "render", token_value):
+        return None
+    
+    # Service type
+    service_type = questionary.select(
+        "What are you deploying?",
+        choices=[
+            questionary.Choice("Web Service (backend/full-stack)", "web_service"),
+            questionary.Choice("Static Site (frontend only)", "static_site"),
+            questionary.Choice("Background Worker", "worker"),
+            questionary.Choice("Cron Job", "cron_job")
+        ]
+    ).ask()
+    
+    # Service name
+    service_name = questionary.text(
+        "Service/Site name (creates servicename.onrender.com):",
+        default=_get_project_name(project_path, summary).lower().replace('_', '-')
+    ).ask()
+    
+    # Build command
+    build_command = questionary.text(
+        "Build command (leave empty to skip):",
+        default=summary.get('build_command', '')
+    ).ask()
+    
+    # Environment
+    environment = questionary.select(
+        "Environment:",
+        choices=[
+            questionary.Choice("Node.js", "node"),
+            questionary.Choice("Python", "python"),
+            questionary.Choice("Ruby", "ruby"),
+            questionary.Choice("Go", "go"),
+            questionary.Choice("Rust", "rust"),
+            questionary.Choice("Docker", "docker")
+        ]
+    ).ask()
+    
+    config = {
+        "name": service_name,
+        "type": service_type,
+        "environment": environment
+    }
+    
+    if build_command:
+        config["build_command"] = build_command
+    
+    # Start command (for web services and workers only)
+    if service_type in ["web_service", "worker"]:
+        start_command = questionary.text(
+            "Start command (how to run your app):",
+            default=_get_start_command_suggestion(summary)
+        ).ask()
+        
+        if start_command:
+            config["start_command"] = start_command
+    
+    return config
 
 def _show_next_steps() -> None:
     """Show next steps after successful configuration"""

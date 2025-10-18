@@ -3,14 +3,13 @@ Netlify deployment platform implementation
 """
 
 import os
-import json
 import requests
 import subprocess
 import zipfile
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 from .base import BasePlatform, DeploymentResult, DeploymentStatus
-from utils.errors import DeployXError, AuthenticationError
+from utils.errors import AuthenticationError
 
 class NetlifyPlatform(BasePlatform):
     """Netlify deployment platform"""

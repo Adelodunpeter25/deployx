@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 from .base import BasePlatform, DeploymentResult, DeploymentStatus
-from utils.errors import DeployXError, AuthenticationError
+from utils.errors import AuthenticationError
 
 class VercelPlatform(BasePlatform):
     """Vercel deployment platform"""

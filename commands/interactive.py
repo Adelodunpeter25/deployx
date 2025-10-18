@@ -1,4 +1,3 @@
-import time
 import questionary
 from utils.ui import header, success, error, info, warning
 from utils.config import Config

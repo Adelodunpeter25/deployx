@@ -4,6 +4,7 @@ from .github import GitHubPlatform
 from .vercel import VercelPlatform
 from .netlify import NetlifyPlatform
 from .railway import RailwayPlatform
+from .render import RenderPlatform
 
 class PlatformFactory:
     """Factory for creating platform instances"""
@@ -38,3 +39,4 @@ PlatformFactory.register_platform("github", GitHubPlatform)
 PlatformFactory.register_platform("vercel", VercelPlatform)
 PlatformFactory.register_platform("netlify", NetlifyPlatform)
 PlatformFactory.register_platform("railway", RailwayPlatform)
+PlatformFactory.register_platform("render", RenderPlatform)
