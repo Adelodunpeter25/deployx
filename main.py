@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from commands.init import init_command
 from commands.deploy import deploy_command, redeploy_command
 from commands.status import status_command, quick_status_command
+from commands.interactive import interactive_command
 from utils.ui import header, error, info
 from utils.errors import DeployXError, display_error_with_suggestions
 
@@ -44,7 +45,7 @@ def cli(ctx, verbose):
       2. Follow the interactive setup wizard
       3. Deploy with 'deployx deploy'
     
-    Documentation: https://github.com/deployx/deployx
+    Documentation: https://github.com/Adelodunpeter25/deployx
     """
     # Ensure context object exists
     ctx.ensure_object(dict)
@@ -203,6 +204,49 @@ def status(ctx, path, quick, verbose):
             traceback.print_exc()
         else:
             error(f"❌ Status check failed: {str(e)}")
+            error("Use --verbose for detailed error information")
+        sys.exit(1)
+
+@cli.command()
+@click.option('--path', '-p', default='.', help='Project path (default: current directory)')
+@click.pass_context
+def interactive(ctx, path):
+    """
+    🎯 Interactive mode - Complete setup and deployment workflow.
+    
+    ┌─ What this command does ──────────────────────────────────────────────────────┐
+    │ • Run complete init → deploy workflow in one command                        │
+    │ • Guide you through setup if no configuration exists                        │
+    │ • Automatically deploy after successful configuration                       │
+    │ • Keep retrying until deployment succeeds                                   │
+    └──────────────────────────────────────────────────────────────────────────────┘
+    
+    ┌─ Perfect for ─────────────────────────────────────────────────────────────────┐
+    │ • First-time users who want everything set up automatically                 │
+    │ • Quick deployment without multiple commands                                │
+    │ • Ensuring deployment succeeds before exiting                              │
+    └──────────────────────────────────────────────────────────────────────────────┘
+    """
+    try:
+        success_result = interactive_command(path)
+        if success_result:
+            sys.exit(0)
+        else:
+            sys.exit(1)
+    except KeyboardInterrupt:
+        error("\n❌ Interactive mode cancelled by user")
+        sys.exit(1)
+    except DeployXError as e:
+        display_error_with_suggestions(e)
+        sys.exit(1)
+    except Exception as e:
+        if ctx.obj.get('verbose'):
+            import traceback
+            error(f"❌ Interactive mode failed: {str(e)}")
+            error("Full traceback:")
+            traceback.print_exc()
+        else:
+            error(f"❌ Interactive mode failed: {str(e)}")
             error("Use --verbose for detailed error information")
         sys.exit(1)
 
