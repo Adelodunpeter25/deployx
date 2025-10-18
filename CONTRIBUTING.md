@@ -90,14 +90,6 @@ When requesting features:
 - Keep examples up-to-date with current API
 - Test all code examples before submitting
 
-### Documentation Structure
-
-- **README.md**: Main project documentation
-- **CONTRIBUTING.md**: This file
-- **Code comments**: Inline documentation
-- **Docstrings**: Function and class documentation
-- **Examples**: Real-world usage examples
-
 ## 🔄 Pull Request Process
 
 ### Before Submitting
