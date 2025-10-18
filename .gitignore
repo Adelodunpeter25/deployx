@@ -8,3 +8,8 @@ wheels/
 .ruff_cache
 # Virtual environments
 .venv
+
+# docs
+README.md
+CONTRIBUTING.md
+LICENSE
