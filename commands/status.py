@@ -152,8 +152,8 @@ def _show_auth_troubleshooting(platform_name: str) -> None:
     if platform_name == 'github':
         print("   • Check your GitHub personal access token")
         print("   • Ensure token has 'repo' and 'workflow' permissions")
-        print("   • Verify GITHUB_TOKEN environment variable is set")
-        print("   • Token may have expired - generate a new one")
+        print("   • Verify .deployx_token file exists and contains valid token")
+        print("   • Token may have expired - run 'deployx init' to update")
         print("   • Check repository exists and you have write access")
 
 def _show_status_troubleshooting(status, platform_name: str) -> None:

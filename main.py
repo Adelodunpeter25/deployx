@@ -149,8 +149,9 @@ def deploy(ctx, path, force):
 @cli.command()
 @click.option('--path', '-p', default='.', help='Project path (default: current directory)')
 @click.option('--quick', '-q', is_flag=True, help='Quick status check (returns exit code only)')
+@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output for debugging')
 @click.pass_context
-def status(ctx, path, quick):
+def status(ctx, path, quick, verbose):
     """
     📊 Check deployment status and information.
     
