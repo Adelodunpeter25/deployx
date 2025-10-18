@@ -6,6 +6,12 @@ from typing import Dict, Any, Optional, Tuple
 from github import Github, GithubException
 from git import Repo, GitCommandError
 import time
+import requests
+
+from utils.errors import (
+    retry_with_backoff, handle_auth_error, handle_build_error, 
+    handle_git_error, handle_github_api_error, safe_execute
+)
 
 from .base import BasePlatform, DeploymentResult, DeploymentStatus
 from .factory import PlatformFactory
@@ -22,10 +28,12 @@ class GitHubPlatform(BasePlatform):
         self.github_client = None
         self.repo_obj = None
     
+    @retry_with_backoff(max_retries=3)
     def validate_credentials(self) -> Tuple[bool, str]:
         """Validate GitHub token and repository access"""
         if not self.token:
-            return False, "GitHub token not found. Set GITHUB_TOKEN environment variable"
+            error = handle_auth_error("github", "No token provided")
+            return False, error.message
         
         if not self.repo_name:
             return False, "Repository name not configured"
@@ -39,22 +47,30 @@ class GitHubPlatform(BasePlatform):
             # Get repository and check write access
             self.repo_obj = self.github_client.get_repo(self.repo_name)
             
-            # Check if user has write access by trying to get repository permissions
-            permissions = self.repo_obj.get_collaborator_permission(user.login)
-            if permissions not in ['admin', 'write']:
-                return False, "Insufficient permissions. Need write access to repository"
+            # Check if user has write access
+            try:
+                permissions = self.repo_obj.get_collaborator_permission(user.login)
+                if permissions not in ['admin', 'write']:
+                    error = handle_auth_error("github", "Insufficient repository permissions")
+                    return False, error.message
+            except:
+                # If we can't check permissions, try a simple operation
+                try:
+                    self.repo_obj.get_contents("README.md")
+                except:
+                    pass  # File might not exist, that's ok
             
             return True, f"GitHub credentials valid for user: {user.login}"
             
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            error = handle_auth_error("github", f"Network error: {str(e)}")
+            return False, error.message
+        except GithubException as e:
+            error = handle_github_api_error(e)
+            return False, error.message
         except Exception as e:
-            if "401" in str(e):
-                return False, "Invalid or expired GitHub token"
-            elif "404" in str(e):
-                return False, "Repository not found or no access"
-            elif "rate limit" in str(e).lower():
-                return False, "GitHub API rate limit exceeded. Try again later"
-            else:
-                return False, f"GitHub validation failed: {str(e)}"
+            error = handle_auth_error("github", str(e))
+            return False, error.message
     
     def prepare_deployment(self, project_path: str, build_command: Optional[str], output_dir: str) -> Tuple[bool, str]:
         """Prepare deployment by building project and checking files"""
@@ -64,7 +80,6 @@ class GitHubPlatform(BasePlatform):
         # Run build command if provided
         if build_command:
             try:
-                # Handle different package managers
                 cmd_parts = build_command.split()
                 result = subprocess.run(
                     cmd_parts,
@@ -79,12 +94,14 @@ class GitHubPlatform(BasePlatform):
                     print(f"Build output: {result.stdout}")
                     
             except subprocess.TimeoutExpired:
-                return False, "Build command timed out after 5 minutes"
+                error = handle_build_error(build_command, "", "Build timed out after 5 minutes")
+                return False, error.message
             except subprocess.CalledProcessError as e:
-                error_msg = e.stderr or e.stdout or "Unknown build error"
-                return False, f"Build failed: {error_msg}"
+                error = handle_build_error(build_command, e.stdout or "", e.stderr or "")
+                return False, error.message
             except FileNotFoundError:
-                return False, f"Build command not found: {build_command}"
+                error = handle_build_error(build_command, "", f"Command not found: {build_command}")
+                return False, error.message
         
         # Check if output directory exists
         if not output_path.exists():
@@ -134,7 +151,8 @@ class GitHubPlatform(BasePlatform):
                     repo.git.checkout('--orphan', self.branch)
                     repo.git.rm('-rf', '.', force=True)
             except GitCommandError as e:
-                return DeploymentResult(False, message=f"Branch management failed: {str(e)}")
+                git_error = handle_git_error(e)
+                return DeploymentResult(False, message=git_error.message)
             
             # Step 3: File Management
             try:
@@ -176,7 +194,8 @@ class GitHubPlatform(BasePlatform):
                     pass
                     
             except GitCommandError as e:
-                return DeploymentResult(False, message=f"Git operations failed: {str(e)}")
+                git_error = handle_git_error(e)
+                return DeploymentResult(False, message=git_error.message)
             
             # Step 5: GitHub Pages Configuration
             try:
