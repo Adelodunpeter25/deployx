@@ -126,33 +126,42 @@ def _configure_github(project_path: str, summary: Dict[str, Any]) -> Optional[Di
     info("⚙️  Configuring GitHub Pages...")
     
     # Get GitHub token
-    token_env = questionary.text(
-        "Environment variable for GitHub token:",
-        default="GITHUB_TOKEN"
+    token_value = questionary.password(
+        "Enter your GitHub personal access token:"
     ).ask()
     
-    if not token_env:
+    if not token_value:
+        error("Token required for GitHub Pages deployment")
         return None
     
-    # Check if token exists
-    if not os.getenv(token_env):
-        warning(f"Environment variable '{token_env}' not found")
-        set_now = questionary.confirm(
-            f"Do you want to set {token_env} now?",
-            default=True
-        ).ask()
+    # Save token to .deployx_token file
+    project_path_obj = Path(project_path)
+    token_file = project_path_obj / ".deployx_token"
+    try:
+        with open(token_file, 'w') as f:
+            f.write(token_value)
+        # Set restrictive permissions (owner read/write only)
+        os.chmod(token_file, 0o600)
+        success("Token saved securely to .deployx_token")
         
-        if set_now:
-            token_value = questionary.password(
-                f"Enter your GitHub personal access token:"
-            ).ask()
+        # Add to .gitignore if it exists
+        gitignore_path = project_path_obj / ".gitignore"
+        if gitignore_path.exists():
+            with open(gitignore_path, 'r') as f:
+                gitignore_content = f.read()
+            if '.deployx_token' not in gitignore_content:
+                with open(gitignore_path, 'a') as f:
+                    f.write('\n.deployx_token\n')
+                info("Added .deployx_token to .gitignore")
+        else:
+            # Create .gitignore with token file
+            with open(gitignore_path, 'w') as f:
+                f.write('.deployx_token\n')
+            info("Created .gitignore with .deployx_token")
             
-            if token_value:
-                os.environ[token_env] = token_value
-                success(f"Token set for this session")
-            else:
-                error("Token required for GitHub Pages deployment")
-                return None
+    except Exception as e:
+        error(f"Failed to save token: {str(e)}")
+        return None
     
     # Auto-detect repository from git remote
     repo_name = _detect_git_repository(project_path)
@@ -196,8 +205,7 @@ def _configure_github(project_path: str, summary: Dict[str, Any]) -> Optional[Di
     return {
         "repo": repo_name,
         "method": method,
-        "branch": branch,
-        "token_env": token_env
+        "branch": branch
     }
 
 def _configure_build_settings(summary: Dict[str, Any]) -> Dict[str, Any]:

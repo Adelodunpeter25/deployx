@@ -7,7 +7,7 @@ REQUIRED_FIELDS = {
 }
 
 SUPPORTED_PLATFORMS = ["github", "vercel", "netlify"]
-SUPPORTED_PROJECT_TYPES = ["react", "vue", "static", "nextjs"]
+SUPPORTED_PROJECT_TYPES = ["react", "vue", "static", "nextjs", "python", "django", "flask", "fastapi", "nodejs", "angular", "vite"]
 
 def validate_config(config: Dict[str, Any]) -> List[str]:
     """Validate configuration and return list of errors"""

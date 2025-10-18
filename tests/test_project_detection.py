@@ -8,7 +8,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from detectors.project import detect_project, get_project_summary, _detect_nodejs_project, _detect_python_project
+from detectors.project import detect_project, get_project_summary
 
 class TestProjectDetection(unittest.TestCase):
     

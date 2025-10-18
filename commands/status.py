@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 
-from utils.ui import header, success, error, info, warning, print_url
+from utils.ui import header, success, error, info
 from utils.config import Config
 from platforms.factory import get_platform
 

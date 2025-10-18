@@ -5,7 +5,6 @@ Test runner for DeployX - runs all test suites
 
 import unittest
 import sys
-import os
 from pathlib import Path
 
 # Add parent directory to path

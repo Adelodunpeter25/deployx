@@ -4,10 +4,10 @@ Comprehensive error handling for DeployX
 
 import time
 import requests
-from typing import Callable, Any, Optional
+from typing import Callable, Any
 from functools import wraps
 
-from .ui import error, warning, info, success
+from .ui import warning, info
 
 class DeployXError(Exception):
     """Base exception for DeployX errors"""

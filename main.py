@@ -5,7 +5,6 @@ A CLI tool for deploying projects to multiple platforms
 """
 
 import sys
-import os
 import click
 from pathlib import Path
 
@@ -15,8 +14,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from commands.init import init_command
 from commands.deploy import deploy_command, redeploy_command
 from commands.status import status_command, quick_status_command
-from utils.ui import header, error, success, info
+from utils.ui import header, error, info
 from utils.errors import DeployXError, display_error_with_suggestions
+
+# Import platforms to register them
 
 # Version information
 __version__ = "0.1.0"

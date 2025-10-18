@@ -5,12 +5,11 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 from github import Github, GithubException
 from git import Repo, GitCommandError
-import time
 import requests
 
 from utils.errors import (
     retry_with_backoff, handle_auth_error, handle_build_error, 
-    handle_git_error, handle_github_api_error, safe_execute
+    handle_git_error, handle_github_api_error
 )
 
 from .base import BasePlatform, DeploymentResult, DeploymentStatus
@@ -21,12 +20,26 @@ class GitHubPlatform(BasePlatform):
     
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
-        self.token = os.getenv(config.get('token_env', 'GITHUB_TOKEN'))
+        self.token = self._get_token()
         self.repo_name = config.get('repo')
         self.method = config.get('method', 'branch')  # 'branch' or 'docs'
         self.branch = config.get('branch', 'gh-pages')
         self.github_client = None
         self.repo_obj = None
+    
+    def _get_token(self) -> Optional[str]:
+        """Get GitHub token from .deployx_token file or environment"""
+        # Try .deployx_token file first
+        token_file = Path('.deployx_token')
+        if token_file.exists():
+            try:
+                with open(token_file, 'r') as f:
+                    return f.read().strip()
+            except Exception:
+                pass
+        
+        # Fallback to environment variable
+        return os.getenv('GITHUB_TOKEN')
     
     @retry_with_backoff(max_retries=3)
     def validate_credentials(self) -> Tuple[bool, str]:

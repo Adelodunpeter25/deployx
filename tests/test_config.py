@@ -1,7 +1,6 @@
 import unittest
 import tempfile
 import shutil
-from pathlib import Path
 import sys
 import os
 

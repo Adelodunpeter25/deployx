@@ -1,10 +1,9 @@
 import time
 import webbrowser
-from pathlib import Path
 from typing import Optional
 import questionary
 
-from utils.ui import header, success, error, info, warning, spinner, progress_bar, print_url
+from utils.ui import header, success, error, info, warning, spinner, print_url
 from utils.config import Config
 from utils.validator import validate_config
 from platforms.factory import get_platform

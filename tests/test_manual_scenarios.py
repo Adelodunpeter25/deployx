@@ -8,10 +8,6 @@ Run these tests manually to ensure DeployX works in real-world conditions.
 """
 
 import unittest
-import tempfile
-import shutil
-import json
-from pathlib import Path
 import sys
 import os
 
