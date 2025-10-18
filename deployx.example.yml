@@ -1,0 +1,29 @@
+# DeployX Configuration File
+# This file is created by 'deployx init' and stores your deployment settings
+
+project:
+  name: "my-awesome-app"        # Project name
+  type: "react"                 # Project type (react, static, vue, etc.)
+
+build:
+  command: "npm run build"      # Build command to run
+  output: "build"               # Output directory after build
+
+platform: "github"             # Target platform (github, vercel, netlify)
+
+# GitHub Pages Configuration
+github:
+  repo: "username/repository"   # GitHub repository (owner/repo)
+  branch: "gh-pages"           # Target branch for deployment
+  token_env: "GITHUB_TOKEN"    # Environment variable for GitHub token
+
+# Vercel Configuration (example)
+# vercel:
+#   project_id: "prj_xxx"
+#   org_id: "team_xxx"
+#   token_env: "VERCEL_TOKEN"
+
+# Netlify Configuration (example)  
+# netlify:
+#   site_id: "site-xxx"
+#   token_env: "NETLIFY_TOKEN"
