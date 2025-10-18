@@ -60,15 +60,17 @@ def init(ctx, path):
     """
     🔧 Initialize deployment configuration for your project.
     
-    This command will:
-    • Analyze your project structure and detect framework
-    • Guide you through platform selection (GitHub Pages, Vercel, Netlify)
-    • Configure build settings and deployment options
-    • Create a deployx.yml configuration file
+    ┌─ What this command does ─────────────────────────────────────────┐
+    │ • Analyze your project structure and detect framework            │
+    │ • Guide you through platform selection (GitHub Pages, Vercel)   │
+    │ • Configure build settings and deployment options               │
+    │ • Create a deployx.yml configuration file                       │
+    └──────────────────────────────────────────────────────────────────┘
     
-    Examples:
-      deployx init                 # Initialize in current directory
-      deployx init --path ./app    # Initialize in specific directory
+    ┌─ Examples ───────────────────────────────────────────────────────┐
+    │ deployx init                 # Initialize in current directory   │
+    │ deployx init --path ./app    # Initialize in specific directory  │
+    └──────────────────────────────────────────────────────────────────┘
     """
     try:
         success_result = init_command(path)
@@ -101,18 +103,20 @@ def deploy(ctx, path, force):
     """
     🚀 Deploy your project to the configured platform.
     
-    This command will:
-    • Validate your configuration and credentials
-    • Run build commands if configured
-    • Deploy files to your chosen platform
-    • Provide live URL and deployment status
+    ┌─ What this command does ─────────────────────────────────────────┐
+    │ • Validate your configuration and credentials                    │
+    │ • Run build commands if configured                               │
+    │ • Deploy files to your chosen platform                          │
+    │ • Provide live URL and deployment status                        │
+    └──────────────────────────────────────────────────────────────────┘
     
-    Examples:
-      deployx deploy               # Interactive deployment
-      deployx deploy --force       # Skip confirmation prompts
-      deployx deploy --path ./app  # Deploy specific directory
+    ┌─ Examples ───────────────────────────────────────────────────────┐
+    │ deployx deploy               # Interactive deployment            │
+    │ deployx deploy --force       # Skip confirmation prompts        │
+    │ deployx deploy --path ./app  # Deploy specific directory        │
+    └──────────────────────────────────────────────────────────────────┘
     
-    Note: Run 'deployx init' first if no configuration exists.
+    💡 Note: Run 'deployx init' first if no configuration exists.
     """
     try:
         if force:
@@ -149,21 +153,24 @@ def status(ctx, path, quick):
     """
     📊 Check deployment status and information.
     
-    This command will:
-    • Show current deployment status (ready, building, error)
-    • Display live URL and last deployment time
-    • Provide troubleshooting tips if issues are found
-    • Show platform-specific configuration details
+    ┌─ What this command does ─────────────────────────────────────────┐
+    │ • Show current deployment status (ready, building, error)        │
+    │ • Display live URL and last deployment time                     │
+    │ • Provide troubleshooting tips if issues are found              │
+    │ • Show platform-specific configuration details                  │
+    └──────────────────────────────────────────────────────────────────┘
     
-    Examples:
-      deployx status               # Full status information
-      deployx status --quick       # Quick check (for CI/CD)
-      deployx status --path ./app  # Check specific directory
+    ┌─ Examples ───────────────────────────────────────────────────────┐
+    │ deployx status               # Full status information           │
+    │ deployx status --quick       # Quick check (for CI/CD)          │
+    │ deployx status --path ./app  # Check specific directory         │
+    └──────────────────────────────────────────────────────────────────┘
     
-    Exit codes (--quick mode):
-      0: Deployment is ready
-      1: Deployment has issues
-      2: Configuration not found
+    ┌─ Exit codes (--quick mode) ──────────────────────────────────────┐
+    │ 0: Deployment is ready                                           │
+    │ 1: Deployment has issues                                         │
+    │ 2: Configuration not found                                       │
+    └──────────────────────────────────────────────────────────────────┘
     """
     try:
         if quick:
@@ -202,6 +209,13 @@ def status(ctx, path, quick):
 def version(ctx):
     """
     📋 Show version information and system details.
+    
+    ┌─ What this command shows ────────────────────────────────────────┐
+    │ • DeployX version and build information                          │
+    │ • Python version and platform details                           │
+    │ • Available deployment platforms                                 │
+    │ • Installation path and system info                              │
+    └──────────────────────────────────────────────────────────────────┘
     """
     header(f"DeployX v{__version__}")
     print(f"Python: {sys.version.split()[0]}")

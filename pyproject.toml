@@ -5,10 +5,10 @@ description = "Deploy web projects to multiple platforms with one command"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-    {name = "DeployX Team", email = "hello@deployx.dev"}
+    {name = "DeployX Team", email = "adelodunpeter24@gmail.com"}
 ]
 maintainers = [
-    {name = "DeployX Team", email = "hello@deployx.dev"}
+    {name = "DeployX Team", email = "adelodunpeter24@gmail.com"}
 ]
 license = {text = "MIT"}
 keywords = ["deployment", "cli", "github-pages", "vercel", "netlify", "web", "static-site"]
@@ -63,3 +63,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+
+[dependency-groups]
+dev = [
+    "twine>=6.2.0",
+]

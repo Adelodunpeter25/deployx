@@ -247,37 +247,6 @@ github:
    - You need write access to the repository
    - Enable GitHub Pages in repository settings (optional - DeployX can enable it)
 
-## 🚨 Troubleshooting
-
-### Common Issues
-
-**Authentication Failed**
-```
-❌ Authentication failed: Invalid or expired GitHub token
-💡 Suggested solutions:
-   1. Generate new token at: https://github.com/settings/tokens
-   2. Ensure token has 'repo' and 'workflow' permissions
-   3. Set token in GITHUB_TOKEN environment variable
-```
-
-**Build Failed**
-```
-❌ Build process failed
-💡 Suggested solutions:
-   1. Install dependencies: npm install
-   2. Check if Node.js and npm are installed
-   3. Verify package.json exists and is valid
-```
-
-**Repository Not Found**
-```
-❌ Repository not found
-💡 Suggested solutions:
-   1. Verify repository name format: owner/repository
-   2. Check if repository exists on GitHub
-   3. Ensure you have access to the repository
-```
-
 ### Debug Mode
 
 Use `--verbose` flag for detailed error information:
@@ -310,17 +279,6 @@ We welcome contributions! Here's how to get started:
 - **Docstrings**: Document all public functions
 - **Error Handling**: Use custom exception classes
 - **Testing**: Write tests for new features
-
-### Submitting Changes
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Add tests for new functionality
-5. Run the test suite: `uv run python tests/run_all_tests.py`
-6. Commit your changes: `git commit -m "Add feature"`
-7. Push to your fork: `git push origin feature-name`
-8. Create a Pull Request
 
 ## 📄 License
 
