@@ -2,7 +2,7 @@
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-passing-green.svg)](./tests/)
+
 
 A modern CLI tool for deploying web projects to multiple platforms with zero configuration. Deploy your React, Next.js, or static sites to GitHub Pages, Vercel, and Netlify with a single command.
 
@@ -311,30 +311,6 @@ We welcome contributions! Here's how to get started:
 - **Error Handling**: Use custom exception classes
 - **Testing**: Write tests for new features
 
-### Adding New Platforms
-
-1. **Create platform class** in `platforms/`
-   ```python
-   from .base import BasePlatform
-   
-   class NewPlatform(BasePlatform):
-       def validate_credentials(self):
-           # Implementation
-           pass
-   ```
-
-2. **Register platform** in `platforms/__init__.py`
-   ```python
-   from .factory import PlatformFactory
-   from .new_platform import NewPlatform
-   
-   PlatformFactory.register_platform('new_platform', NewPlatform)
-   ```
-
-3. **Add tests** in `tests/test_new_platform.py`
-
-4. **Update documentation**
-
 ### Submitting Changes
 
 1. Fork the repository
@@ -358,9 +334,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📖 [Documentation](https://github.com/deployx/deployx/wiki)
 - 🐛 [Issue Tracker](https://github.com/deployx/deployx/issues)
-- 💬 [Discussions](https://github.com/deployx/deployx/discussions)
 
 ---
 
