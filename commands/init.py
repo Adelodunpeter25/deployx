@@ -47,7 +47,9 @@ def init_command(project_path: str = ".") -> bool:
         "📡 Where do you want to deploy?",
         choices=[
             questionary.Choice("GitHub Pages (Free static hosting)", "github"),
-            # Future platforms can be added here
+            questionary.Choice("Vercel (Serverless deployment)", "vercel"),
+            questionary.Choice("Netlify (JAMstack hosting)", "netlify"),
+            questionary.Choice("Railway (Full-stack apps)", "railway"),
         ]
     ).ask()
     
@@ -60,6 +62,18 @@ def init_command(project_path: str = ".") -> bool:
     if platform == "github":
         platform_config = _configure_github(project_path, summary)
         if not platform_config:
+            return False
+    elif platform == "vercel":
+        platform_config = _configure_vercel(project_path, summary)
+        if platform_config is None:
+            return False
+    elif platform == "netlify":
+        platform_config = _configure_netlify(project_path, summary)
+        if platform_config is None:
+            return False
+    elif platform == "railway":
+        platform_config = _configure_railway(project_path, summary)
+        if platform_config is None:
             return False
     
     # Confirm build settings
@@ -283,10 +297,116 @@ def _get_project_name(project_path: str, summary: Dict[str, Any]) -> str:
     # Fallback to directory name
     return Path(project_path).resolve().name
 
+def _configure_vercel(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Configure Vercel settings"""
+    info("⚙️  Configuring Vercel...")
+    
+    # Get Vercel token
+    token_value = questionary.password(
+        "Enter your Vercel token:"
+    ).ask()
+    
+    if not token_value:
+        error("Token required for Vercel deployment")
+        return None
+    
+    # Save token
+    if not _save_platform_token(project_path, "vercel", token_value):
+        return None
+    
+    return {}
+
+def _configure_netlify(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Configure Netlify settings"""
+    info("⚙️  Configuring Netlify...")
+    
+    # Get Netlify token
+    token_value = questionary.password(
+        "Enter your Netlify token:"
+    ).ask()
+    
+    if not token_value:
+        error("Token required for Netlify deployment")
+        return None
+    
+    # Save token
+    if not _save_platform_token(project_path, "netlify", token_value):
+        return None
+    
+    # Optional site ID
+    site_id = questionary.text(
+        "Site ID (optional, leave empty to create new):"
+    ).ask()
+    
+    config = {}
+    if site_id:
+        config["site_id"] = site_id
+    
+    return config
+
+def _configure_railway(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Configure Railway settings"""
+    info("⚙️  Configuring Railway...")
+    
+    # Get Railway token
+    token_value = questionary.password(
+        "Enter your Railway token:"
+    ).ask()
+    
+    if not token_value:
+        error("Token required for Railway deployment")
+        return None
+    
+    # Save token
+    if not _save_platform_token(project_path, "railway", token_value):
+        return None
+    
+    # Optional project ID
+    project_id = questionary.text(
+        "Project ID (optional, leave empty to create new):"
+    ).ask()
+    
+    config = {}
+    if project_id:
+        config["project_id"] = project_id
+    
+    return config
+
+def _save_platform_token(project_path: str, platform: str, token: str) -> bool:
+    """Save platform token to file"""
+    project_path_obj = Path(project_path)
+    token_file = project_path_obj / f".deployx_{platform}_token"
+    
+    try:
+        with open(token_file, 'w') as f:
+            f.write(token)
+        os.chmod(token_file, 0o600)
+        success(f"Token saved securely to .deployx_{platform}_token")
+        
+        # Add to .gitignore
+        gitignore_path = project_path_obj / ".gitignore"
+        token_entry = f".deployx_{platform}_token"
+        
+        if gitignore_path.exists():
+            with open(gitignore_path, 'r') as f:
+                gitignore_content = f.read()
+            if token_entry not in gitignore_content:
+                with open(gitignore_path, 'a') as f:
+                    f.write(f'\n{token_entry}\n')
+        else:
+            with open(gitignore_path, 'w') as f:
+                f.write(f'{token_entry}\n')
+        
+        return True
+        
+    except Exception as e:
+        error(f"Failed to save token: {str(e)}")
+        return False
+
 def _show_next_steps() -> None:
     """Show next steps after successful configuration"""
     print("\n🎉 Setup complete! Next steps:")
     print("   1. Run 'deployx deploy' to deploy your project")
     print("   2. Check deployment status with 'deployx status'")
     print("   3. Edit 'deployx.yml' to customize settings")
-    print("\n💡 Make sure your GitHub token has repository permissions!")
+    print("\n💡 Make sure your tokens have the required permissions!")

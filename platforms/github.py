@@ -13,7 +13,6 @@ from utils.errors import (
 )
 
 from .base import BasePlatform, DeploymentResult, DeploymentStatus
-from .factory import PlatformFactory
 
 class GitHubPlatform(BasePlatform):
     """GitHub Pages deployment platform"""
@@ -357,5 +356,3 @@ class GitHubPlatform(BasePlatform):
         
         return self._generate_pages_url()
 
-# Register the platform
-PlatformFactory.register_platform('github', GitHubPlatform)

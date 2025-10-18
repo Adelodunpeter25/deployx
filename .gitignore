@@ -13,3 +13,6 @@ wheels/
 README.md
 CONTRIBUTING.md
 LICENSE
+.deployx_vercel_token
+
+.deployx_token

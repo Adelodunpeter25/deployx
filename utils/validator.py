@@ -6,7 +6,7 @@ REQUIRED_FIELDS = {
     "platform": []
 }
 
-SUPPORTED_PLATFORMS = ["github", "vercel", "netlify"]
+SUPPORTED_PLATFORMS = ["github", "vercel", "netlify", "railway"]
 SUPPORTED_PROJECT_TYPES = ["react", "vue", "static", "nextjs", "python", "django", "flask", "fastapi", "nodejs", "angular", "vite"]
 
 def validate_config(config: Dict[str, Any]) -> List[str]:

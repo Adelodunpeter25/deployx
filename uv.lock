@@ -626,6 +626,7 @@ dev = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "pytest" },
     { name = "twine" },
 ]
 
@@ -647,7 +648,10 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "twine", specifier = ">=6.2.0" }]
+dev = [
+    { name = "pytest", specifier = ">=8.4.2" },
+    { name = "twine", specifier = ">=6.2.0" },
+]
 
 [[package]]
 name = "docutils"
