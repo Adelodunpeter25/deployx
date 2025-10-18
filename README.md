@@ -201,25 +201,6 @@ github:
 2. Grant `repo` and `workflow` permissions
 3. Set environment variable: `export GITHUB_TOKEN=your_token_here`
 
-## 🎯 Supported Projects
-
-### JavaScript/Node.js
-- **React** - Create React App, Vite
-- **Vue.js** - Vue CLI, Vite
-- **Next.js** - Static export
-- **Angular** - Angular CLI
-- **Express** - Node.js backend
-- **Static HTML** - Plain HTML/CSS/JS
-
-### Python
-- **Django** - Web framework with static files
-- **Flask** - Micro web framework
-- **FastAPI** - Modern API framework
-
-### Package Managers
-- **Node.js**: npm, yarn, pnpm, bun
-- **Python**: pip, poetry, pipenv, uv
-
 ## 🔧 Environment Setup
 
 ### GitHub Pages Setup
