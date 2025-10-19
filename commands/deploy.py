@@ -8,7 +8,7 @@ from utils.config import Config
 from utils.validator import validate_config
 from platforms.factory import get_platform
 
-def deploy_command(project_path: str = ".") -> bool:
+def deploy_command(project_path: str = ".", dry_run: bool = False) -> bool:
     """Execute deployment to configured platform"""
     
     config = Config(project_path)
@@ -34,6 +34,10 @@ def deploy_command(project_path: str = ".") -> bool:
     except Exception as e:
         error(f"❌ Failed to load configuration: {str(e)}")
         return False
+    
+    # Handle dry-run mode
+    if dry_run:
+        return _show_dry_run_summary(config_data)
     
     # Display deployment summary
     if not _show_deployment_summary(config_data):
@@ -127,6 +131,31 @@ def deploy_command(project_path: str = ".") -> bool:
             except Exception as e:
                 warning(f"Could not open browser: {str(e)}")
     
+    # Record deployment in history
+    try:
+        from commands.history import add_to_history
+        from git import Repo
+        
+        # Try to get commit ID
+        commit_id = None
+        try:
+            repo = Repo(project_path)
+            commit_id = repo.head.commit.hexsha
+        except:
+            pass
+        
+        add_to_history(project_path, {
+            'platform': platform_name,
+            'status': 'success',
+            'url': result.url,
+            'deployment_id': result.deployment_id,
+            'commit_id': commit_id,
+            'deploy_time': deploy_time
+        })
+    except:
+        # Don't fail deployment if history recording fails
+        pass
+    
     # Show next steps
     _show_post_deployment_info(platform_name, result.url)
     
@@ -184,6 +213,49 @@ def _show_post_deployment_info(platform_name: str, url: Optional[str]) -> None:
     
     if url:
         print(f"   • Bookmark your site: {url}")
+
+def _show_dry_run_summary(config_data: dict) -> bool:
+    """Show what would happen in a deployment without actually deploying"""
+    project = config_data.get('project', {})
+    build = config_data.get('build', {})
+    platform_name = config_data.get('platform')
+    platform_config = config_data.get(platform_name, {})
+    
+    header("Dry Run - Deployment Preview")
+    
+    print("\n📄 Configuration:")
+    print(f"   Project: {project.get('name', 'Unknown')}")
+    print(f"   Type: {project.get('type', 'Unknown')}")
+    print(f"   Platform: {platform_name}")
+    
+    if platform_name == 'github':
+        print(f"   Repository: {platform_config.get('repo', 'Not configured')}")
+        print(f"   Method: {platform_config.get('method', 'branch')}")
+        if platform_config.get('method') == 'branch':
+            print(f"   Branch: {platform_config.get('branch', 'gh-pages')}")
+    elif platform_name in ['vercel', 'netlify', 'railway', 'render']:
+        if platform_config.get('name'):
+            print(f"   Service: {platform_config.get('name')}")
+    
+    print("\n🔨 Build Process:")
+    if build.get('command'):
+        print(f"   • Run build command: {build.get('command')}")
+    else:
+        print("   • No build command configured")
+    
+    print(f"   • Deploy from: {build.get('output', '.')}")
+    
+    print("\n🚀 Deployment Steps:")
+    print("   1. Validate credentials")
+    print("   2. Run build process (if configured)")
+    print("   3. Prepare deployment files")
+    print("   4. Upload to platform")
+    print("   5. Update live site")
+    
+    print("\nℹ️  This is a dry run - no actual deployment will occur")
+    print("   Run 'deployx deploy' to perform the actual deployment")
+    
+    return True
 
 def redeploy_command(project_path: str = ".") -> bool:
     """Quick redeploy without confirmation (for CI/CD)"""

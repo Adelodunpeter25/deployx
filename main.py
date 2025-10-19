@@ -15,6 +15,9 @@ from commands.init import init_command
 from commands.deploy import deploy_command, redeploy_command
 from commands.status import status_command, quick_status_command
 from commands.interactive import interactive_command
+from commands.logs import logs_command
+from commands.config import config_show_command, config_edit_command, config_validate_command
+from commands.history import history_command
 from utils.ui import header, error, info
 from utils.errors import DeployXError, display_error_with_suggestions
 
@@ -100,8 +103,9 @@ def init(ctx, path):
 @cli.command()
 @click.option('--path', '-p', default='.', help='Project path (default: current directory)')
 @click.option('--force', '-f', is_flag=True, help='Skip confirmation prompts')
+@click.option('--dry-run', is_flag=True, help='Show what would happen without deploying')
 @click.pass_context
-def deploy(ctx, path, force):
+def deploy(ctx, path, force, dry_run):
     """
     🚀 Deploy your project to the configured platform.
     
@@ -121,7 +125,9 @@ def deploy(ctx, path, force):
     💡 Note: Run 'deployx init' first if no configuration exists.
     """
     try:
-        if force:
+        if dry_run:
+            success_result = deploy_command(path, dry_run=True)
+        elif force:
             success_result = redeploy_command(path)
         else:
             success_result = deploy_command(path)
@@ -248,6 +254,111 @@ def interactive(ctx, path):
         else:
             error(f"❌ Interactive mode failed: {str(e)}")
             error("Use --verbose for detailed error information")
+        sys.exit(1)
+
+@cli.command()
+@click.option('--path', '-p', default='.', help='Project path (default: current directory)')
+@click.option('--follow', '-f', is_flag=True, help='Stream logs in real-time')
+@click.option('--tail', '-t', type=int, help='Number of lines to show from end')
+@click.pass_context
+def logs(ctx, path, follow, tail):
+    """
+    📋 View deployment logs.
+    
+    Examples:
+      deployx logs                 # Show recent logs
+      deployx logs --follow        # Stream logs in real-time
+      deployx logs --tail 100      # Show last 100 lines
+    """
+    try:
+        success_result = logs_command(path, follow=follow, tail=tail)
+        if success_result:
+            sys.exit(0)
+        else:
+            sys.exit(1)
+    except KeyboardInterrupt:
+        info("\n📋 Logs viewing cancelled")
+        sys.exit(0)
+    except Exception as e:
+        if ctx.obj.get('verbose'):
+            import traceback
+            error(f"❌ Logs command failed: {str(e)}")
+            traceback.print_exc()
+        else:
+            error(f"❌ Logs command failed: {str(e)}")
+        sys.exit(1)
+
+@cli.group()
+def config():
+    """
+    ⚙️  Configuration management commands.
+    """
+    pass
+
+@config.command('show')
+@click.option('--path', '-p', default='.', help='Project path (default: current directory)')
+@click.pass_context
+def config_show(ctx, path):
+    """
+    📄 Show current configuration.
+    """
+    try:
+        success_result = config_show_command(path)
+        sys.exit(0 if success_result else 1)
+    except Exception as e:
+        error(f"❌ Failed to show config: {str(e)}")
+        sys.exit(1)
+
+@config.command('edit')
+@click.option('--path', '-p', default='.', help='Project path (default: current directory)')
+@click.pass_context
+def config_edit(ctx, path):
+    """
+    ✏️  Edit configuration file.
+    """
+    try:
+        success_result = config_edit_command(path)
+        sys.exit(0 if success_result else 1)
+    except Exception as e:
+        error(f"❌ Failed to edit config: {str(e)}")
+        sys.exit(1)
+
+@config.command('validate')
+@click.option('--path', '-p', default='.', help='Project path (default: current directory)')
+@click.pass_context
+def config_validate(ctx, path):
+    """
+    🔍 Validate configuration without deploying.
+    """
+    try:
+        success_result = config_validate_command(path)
+        sys.exit(0 if success_result else 1)
+    except Exception as e:
+        error(f"❌ Failed to validate config: {str(e)}")
+        sys.exit(1)
+
+@cli.command()
+@click.option('--path', '-p', default='.', help='Project path (default: current directory)')
+@click.option('--limit', '-l', type=int, help='Number of deployments to show')
+@click.pass_context
+def history(ctx, path, limit):
+    """
+    📊 Show deployment history.
+    
+    Examples:
+      deployx history              # Show all deployment history
+      deployx history --limit 10   # Show last 10 deployments
+    """
+    try:
+        success_result = history_command(path, limit=limit)
+        sys.exit(0 if success_result else 1)
+    except Exception as e:
+        if ctx.obj.get('verbose'):
+            import traceback
+            error(f"❌ History command failed: {str(e)}")
+            traceback.print_exc()
+        else:
+            error(f"❌ History command failed: {str(e)}")
         sys.exit(1)
 
 @cli.command()
