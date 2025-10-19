@@ -10,6 +10,5 @@ wheels/
 .venv
 
 # docs
-README.md
 CONTRIBUTING.md
 LICENSE
