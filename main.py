@@ -21,7 +21,7 @@ from utils.errors import DeployXError, display_error_with_suggestions
 # Import platforms to register them
 
 # Version information
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 @click.group()
 @click.version_option(version=__version__, prog_name="DeployX")
