@@ -2,7 +2,7 @@
 name = "deployx"
 version = "0.3.0"
 description = "Deploy web projects to multiple platforms with one command"
-# readme = "README.md"
+readme = "README.md"
 requires-python = ">=3.9"
 authors = [
     {name = "Adelodun Peter", email = "adelodunpeter24@gmail.com"}
