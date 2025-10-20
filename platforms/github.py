@@ -65,11 +65,11 @@ class GitHubPlatform(BasePlatform):
                 if permissions not in ['admin', 'write']:
                     error = handle_auth_error("github", "Insufficient repository permissions")
                     return False, error.message
-            except:
+            except Exception:
                 # If we can't check permissions, try a simple operation
                 try:
                     self.repo_obj.get_contents("README.md")
-                except:
+                except Exception:
                     pass  # File might not exist, that's ok
             
             return True, f"GitHub credentials valid for user: {user.login}"
@@ -147,7 +147,7 @@ class GitHubPlatform(BasePlatform):
             # Step 1: Repository Setup
             try:
                 repo = Repo(project_path)
-            except:
+            except Exception:
                 return DeploymentResult(False, message="Not a git repository. Initialize with 'git init'")
             
             # Store current branch
@@ -214,12 +214,12 @@ class GitHubPlatform(BasePlatform):
                 if self.repo_obj:
                     # Enable GitHub Pages if not already enabled
                     try:
-                        pages = self.repo_obj.get_pages_build()
-                    except:
+                        self.repo_obj.get_pages_build()
+                    except Exception:
                         # Pages not enabled, try to enable it
                         try:
                             self.repo_obj.create_pages_site(source={"branch": self.branch, "path": "/"})
-                        except:
+                        except Exception:
                             pass  # May already be enabled or insufficient permissions
             except Exception:
                 pass  # Non-critical, continue with deployment
@@ -227,7 +227,7 @@ class GitHubPlatform(BasePlatform):
             # Switch back to original branch
             try:
                 repo.git.checkout(current_branch)
-            except:
+            except Exception:
                 pass  # Non-critical if we can't switch back
             
             # Step 6: URL Generation
@@ -284,17 +284,14 @@ class GitHubPlatform(BasePlatform):
                 try:
                     branch_ref = self.repo_obj.get_git_ref(f"heads/{self.branch}")
                     last_commit = branch_ref.object.sha[:7]
-                except:
+                except Exception:
                     last_commit = "unknown"
                 
                 # Check if Pages is enabled and get configuration
                 try:
-                    pages_info = self.repo_obj.get_pages_build()
-                    pages_enabled = True
-                    https_enforced = getattr(pages_info, 'https_enforced', False)
-                except:
-                    pages_enabled = False
-                    https_enforced = False
+                    self.repo_obj.get_pages_build()
+                except Exception:
+                    pass
                 
                 # Determine status
                 if pages_build.status == "built":
@@ -339,7 +336,7 @@ class GitHubPlatform(BasePlatform):
                 cname_content = self.repo_obj.get_contents("CNAME", ref=self.branch)
                 custom_domain = cname_content.decoded_content.decode().strip()
                 return f"https://{custom_domain}"
-        except:
+        except Exception:
             pass
         
         # User/org repos (username.github.io)

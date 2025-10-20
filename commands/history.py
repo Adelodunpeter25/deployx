@@ -76,7 +76,7 @@ def _load_history(project_path: str) -> List[Dict[str, Any]]:
     try:
         with open(history_file, 'r') as f:
             return json.load(f)
-    except:
+    except Exception:
         return []
 
 def _save_history(project_path: str, history: List[Dict[str, Any]]) -> None:
@@ -101,7 +101,7 @@ def _add_to_gitignore(project_path: str) -> None:
         else:
             with open(gitignore_path, 'w') as f:
                 f.write(f'{history_entry}\n')
-    except:
+    except Exception:
         pass
 
 def _display_deployment(deployment: Dict[str, Any], index: int) -> None:
@@ -117,7 +117,7 @@ def _display_deployment(deployment: Dict[str, Any], index: int) -> None:
     try:
         dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
         formatted_time = dt.strftime('%Y-%m-%d %H:%M:%S')
-    except:
+    except Exception:
         formatted_time = timestamp
     
     # Status emoji

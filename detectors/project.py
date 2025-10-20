@@ -115,9 +115,6 @@ def _detect_python_project(path: Path) -> ProjectInfo:
     info.type = "python"
     info.package_manager = _detect_python_package_manager(path)
     
-    # Check for Python files that indicate framework
-    python_files = list(path.glob("*.py")) + list(path.glob("**/*.py"))
-    
     # Read requirements or dependencies to detect framework
     requirements = _read_python_requirements(path)
     
@@ -152,7 +149,7 @@ def _read_python_requirements(path: Path) -> List[str]:
             with open(path / "requirements.txt", 'r') as f:
                 requirements.extend([line.split('==')[0].split('>=')[0].split('<=')[0].strip() 
                                    for line in f if line.strip() and not line.startswith('#')])
-        except:
+        except Exception:
             pass
     
     # Check pyproject.toml
@@ -163,7 +160,7 @@ def _read_python_requirements(path: Path) -> List[str]:
                 data = tomllib.load(f)
                 deps = data.get('project', {}).get('dependencies', [])
                 requirements.extend([dep.split('==')[0].split('>=')[0].split('<=')[0].strip() for dep in deps])
-        except:
+        except Exception:
             pass
     
     return [req.lower() for req in requirements]

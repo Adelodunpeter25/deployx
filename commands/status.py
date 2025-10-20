@@ -106,7 +106,7 @@ def _display_status_info(config_data: dict, status, platform) -> None:
             dt = datetime.fromisoformat(status.last_updated.replace('Z', '+00:00'))
             formatted_time = dt.strftime('%Y-%m-%d %H:%M:%S UTC')
             print(f"   Last Updated: {formatted_time}")
-        except:
+        except Exception:
             print(f"   Last Updated: {status.last_updated}")
     else:
         print("   Last Updated: Unknown")

@@ -158,7 +158,7 @@ class TestErrorScenarios(unittest.TestCase):
     
     def test_init_no_project_files(self):
         """Test init with empty directory"""
-        result = init_command(str(self.project_path))
+        init_command(str(self.project_path))
         # Should still work, just detect as unknown project
         # Implementation depends on how we handle unknown projects
     
@@ -250,7 +250,7 @@ class TestEdgeCases(unittest.TestCase):
         
         # Should handle gracefully
         from detectors.project import detect_project
-        info = detect_project(str(self.project_path))
+        detect_project(str(self.project_path))
         # Should not crash
     
     def test_no_build_output(self):
@@ -265,7 +265,7 @@ class TestEdgeCases(unittest.TestCase):
             json.dump(package_json, f)
         
         from detectors.project import detect_project
-        info = detect_project(str(self.project_path))
+        detect_project(str(self.project_path))
         # Should detect project type but handle missing build output
     
     def test_corrupted_config_file(self):
@@ -276,7 +276,7 @@ class TestEdgeCases(unittest.TestCase):
         config = Config(str(self.project_path))
         # Should handle YAML parsing errors gracefully
         try:
-            data = config.load()
+            config.load()
             # Should return empty dict or handle error
         except Exception:
             # Should not crash the application

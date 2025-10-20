@@ -384,7 +384,7 @@ def version(ctx):
         from platforms.factory import PlatformFactory
         platforms = PlatformFactory.get_available_platforms()
         print(f"Available Platforms: {', '.join(platforms)}")
-    except:
+    except Exception:
         print("Available Platforms: Error loading")
 
 def main():

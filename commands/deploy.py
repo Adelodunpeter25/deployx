@@ -168,7 +168,7 @@ def deploy_command(project_path: str = ".", dry_run: bool = False) -> bool:
         try:
             repo = Repo(project_path)
             commit_id = repo.head.commit.hexsha
-        except:
+        except Exception:
             pass
         
         add_to_history(project_path, {
@@ -179,7 +179,7 @@ def deploy_command(project_path: str = ".", dry_run: bool = False) -> bool:
             'commit_id': commit_id,
             'deploy_time': deploy_time
         })
-    except:
+    except Exception:
         # Don't fail deployment if history recording fails
         pass
     

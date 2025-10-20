@@ -8,7 +8,7 @@ from utils.ui import header, success, error, info, warning, print_config_summary
 from utils.config import Config, create_default_config
 from utils.validator import validate_config
 from detectors.project import detect_project, get_project_summary
-from platforms.factory import PlatformFactory
+
 
 def init_command(project_path: str = ".", skip_header: bool = False) -> bool:
     """Initialize DeployX configuration for a project"""
@@ -37,8 +37,7 @@ def init_command(project_path: str = ".", skip_header: bool = False) -> bool:
     summary = get_project_summary(project_info)
     _display_detection_results(summary)
     
-    # Get available platforms
-    platforms = PlatformFactory.get_available_platforms()
+
     
     # Platform selection with visual wizard
     platform = platform_selection_wizard()
@@ -279,7 +278,7 @@ def _get_project_name(project_path: str, summary: Dict[str, Any]) -> str:
                 data = json.load(f)
                 if 'name' in data:
                     return data['name']
-        except:
+        except Exception:
             pass
     
     # Fallback to directory name
