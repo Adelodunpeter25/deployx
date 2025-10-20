@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from utils.ui import header, success, error, info, warning
+from utils.ui import header, error, info, warning
 from utils.config import Config
 
 def history_command(project_path: str = ".", limit: Optional[int] = None) -> bool:

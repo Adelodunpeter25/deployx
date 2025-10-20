@@ -3,13 +3,15 @@ import webbrowser
 from typing import Optional
 import questionary
 
-from utils.ui import header, success, error, info, warning, spinner, print_url
+from utils.ui import header, success, error, info, warning, spinner, print_url, build_spinner, smart_error_recovery
 from utils.config import Config
 from utils.validator import validate_config
 from platforms.factory import get_platform
 
 def deploy_command(project_path: str = ".", dry_run: bool = False) -> bool:
     """Execute deployment to configured platform"""
+    
+    header("Deploy Project")
     
     config = Config(project_path)
     
@@ -55,12 +57,12 @@ def deploy_command(project_path: str = ".", dry_run: bool = False) -> bool:
         return False
     
     # Start deployment process
-    header(f"Deploying to {platform_name.title()}")
+    info(f"🚀 Deploying to {platform_name.title()}")
     start_time = time.time()
     
     # Step 1: Validate credentials
     info("🔐 Validating credentials...")
-    with spinner("Checking authentication"):
+    with spinner("Checking authentication", platform_name):
         valid, message = platform.validate_credentials()
     
     if not valid:
@@ -77,21 +79,35 @@ def deploy_command(project_path: str = ".", dry_run: bool = False) -> bool:
     info("🔨 Preparing deployment...")
     
     if build_command:
-        with spinner(f"Running build command: {build_command}"):
+        with build_spinner(build_command, platform_name):
             prepared, prep_message = platform.prepare_deployment(
                 project_path, build_command, output_dir
             )
     else:
-        with spinner("Checking files"):
+        with spinner("Checking files", platform_name):
             prepared, prep_message = platform.prepare_deployment(
                 project_path, None, output_dir
             )
     
     if not prepared:
         error(f"❌ Preparation failed: {prep_message}")
-        return False
-    
-    success(f"✅ {prep_message}")
+        # Try smart error recovery
+        if smart_error_recovery(prep_message, "build"):
+            info("🔄 Retrying after applying fixes...")
+            # Retry preparation
+            with spinner("Retrying preparation", platform_name):
+                prepared, prep_message = platform.prepare_deployment(
+                    project_path, build_command, output_dir
+                )
+            if prepared:
+                success(f"✅ {prep_message}")
+            else:
+                error(f"❌ Retry failed: {prep_message}")
+                return False
+        else:
+            return False
+    else:
+        success(f"✅ {prep_message}")
     
     # Step 3: Execute deployment
     info("🚀 Executing deployment...")
@@ -101,13 +117,24 @@ def deploy_command(project_path: str = ".", dry_run: bool = False) -> bool:
     
     if not result.success:
         error(f"❌ Deployment failed: {result.message}")
-        return False
+        # Try smart error recovery for deployment failures
+        if smart_error_recovery(result.message, "network"):
+            info("🔄 Retrying deployment...")
+            with spinner("Retrying deployment", platform_name):
+                result = platform.execute_deployment(project_path, output_dir)
+            if result.success:
+                success("✅ Retry successful!")
+            else:
+                error(f"❌ Retry failed: {result.message}")
+                return False
+        else:
+            return False
     
     # Calculate deployment time
     deploy_time = time.time() - start_time
     
-    # Step 4: Display success results
-    success("🎉 Deployment successful!")
+    # Step 4: Display success results with celebration
+    success("Deployment successful!", celebrate=True)
     
     if result.url:
         print_url("🌐 Live URL", result.url)

@@ -5,7 +5,7 @@ Configuration management commands for DeployX
 import os
 import subprocess
 from pathlib import Path
-from utils.ui import header, success, error, info, warning, print_config_summary
+from utils.ui import header, success, error, info, print_config_summary
 from utils.config import Config
 from utils.validator import validate_config
 

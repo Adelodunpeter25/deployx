@@ -2,9 +2,8 @@
 Logs viewing commands for DeployX
 """
 
-import time
-from typing import Optional, List
-from utils.ui import header, success, error, info, warning
+from typing import Optional
+from utils.ui import error, info, warning
 from utils.config import Config
 from platforms.factory import get_platform
 

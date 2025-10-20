@@ -4,18 +4,19 @@ from typing import Dict, Any, Optional
 import questionary
 from git import Repo, InvalidGitRepositoryError
 
-from utils.ui import header, success, error, info, warning, print_config_summary
+from utils.ui import header, success, error, info, warning, print_config_summary, platform_selection_wizard
 from utils.config import Config, create_default_config
 from utils.validator import validate_config
 from detectors.project import detect_project, get_project_summary
 from platforms.factory import PlatformFactory
 
-def init_command(project_path: str = ".") -> bool:
+def init_command(project_path: str = ".", skip_header: bool = False) -> bool:
     """Initialize DeployX configuration for a project"""
     
     # Display welcome message
-    header("DeployX - Deploy Anywhere with One Command")
-    print("🚀 Let's set up deployment for your project!\n")
+    if not skip_header:
+        header("Initialize Configuration")
+        print("🚀 Let's set up deployment for your project!\n")
     
     config = Config(project_path)
     
@@ -31,28 +32,16 @@ def init_command(project_path: str = ".") -> bool:
             info("Setup cancelled. Use 'deployx deploy' to deploy with existing config.")
             return False
     
-    # Run project detection
-    info("🔍 Analyzing your project...")
+    # Run project detection and display results
     project_info = detect_project(project_path)
     summary = get_project_summary(project_info)
-    
-    # Display detection results
     _display_detection_results(summary)
     
     # Get available platforms
     platforms = PlatformFactory.get_available_platforms()
     
-    # Platform selection
-    platform = questionary.select(
-        "📡 Where do you want to deploy?",
-        choices=[
-            questionary.Choice("GitHub Pages (Free static hosting)", "github"),
-            questionary.Choice("Vercel (Serverless deployment)", "vercel"),
-            questionary.Choice("Netlify (Platform for web application)", "netlify"),
-            questionary.Choice("Railway (Full-stack apps)", "railway"),
-            questionary.Choice("Render (Cloud platform for developers)", "render"),
-        ]
-    ).ask()
+    # Platform selection with visual wizard
+    platform = platform_selection_wizard()
     
     if not platform:
         error("Platform selection cancelled")
@@ -122,7 +111,7 @@ def init_command(project_path: str = ".") -> bool:
 
 def _display_detection_results(summary: Dict[str, Any]) -> None:
     """Display project detection results"""
-    info("📋 Project Analysis Results:")
+    print("📋 Project detected:")
     print(f"   Type: {summary['type']}")
     
     if summary['framework']:
@@ -134,19 +123,14 @@ def _display_detection_results(summary: Dict[str, Any]) -> None:
         print(f"   Build Command: {summary['build_command']}")
     
     print(f"   Output Directory: {summary['output_dir']}")
-    
-    if summary['detected_files']:
-        print(f"   Detected Files: {', '.join(summary['detected_files'])}")
-    
     print()
 
 def _configure_github(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Configure GitHub Pages settings"""
-    info("⚙️  Configuring GitHub Pages...")
     
     # Get GitHub token
     token_value = questionary.password(
-        "Enter your GitHub personal access token:"
+        "Enter your GitHub personal access token:\n🔗 Get it from: github.com/settings/tokens\n🔑 Needs: repo, workflow permissions\n🏷️  Format: ghp_xxxxxxxxxxxx\n"
     ).ask()
     
     if not token_value:
@@ -229,7 +213,6 @@ def _configure_github(project_path: str, summary: Dict[str, Any]) -> Optional[Di
 
 def _configure_build_settings(summary: Dict[str, Any]) -> Dict[str, Any]:
     """Configure build settings"""
-    info("🔧 Configuring build settings...")
     
     # Build command
     build_command = summary.get('build_command')
@@ -304,11 +287,10 @@ def _get_project_name(project_path: str, summary: Dict[str, Any]) -> str:
 
 def _configure_vercel(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Configure Vercel settings"""
-    info("⚙️  Configuring Vercel...")
     
     # Get Vercel token
     token_value = questionary.password(
-        "Enter your Vercel token:"
+        "Enter your Vercel token:\n🔗 Get it from: vercel.com/account/tokens\n🔑 Needs: Full access\n🏷️  Format: xxxxxxxxxx\n"
     ).ask()
     
     if not token_value:
@@ -340,11 +322,10 @@ def _configure_vercel(project_path: str, summary: Dict[str, Any]) -> Optional[Di
 
 def _configure_netlify(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Configure Netlify settings"""
-    info("⚙️  Configuring Netlify...")
     
     # Get Netlify token
     token_value = questionary.password(
-        "Enter your Netlify Personal Access Token:"
+        "Enter your Netlify Personal Access Token:\n🔗 Get it from: app.netlify.com/user/applications#personal-access-tokens\n🔑 Needs: Full access\n🏷️  Format: xxxxxxxxxx\n"
     ).ask()
     
     if not token_value:
@@ -383,11 +364,10 @@ def _configure_netlify(project_path: str, summary: Dict[str, Any]) -> Optional[D
 
 def _configure_railway(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Configure Railway settings"""
-    info("⚙️  Configuring Railway...")
     
     # Get Railway token
     token_value = questionary.password(
-        "Enter your Railway API token:"
+        "Enter your Railway API token:\n🔗 Get it from: railway.app/account/tokens\n🔑 Needs: Full access\n🏷️  Format: xxxxxxxxxx\n"
     ).ask()
     
     if not token_value:
@@ -488,11 +468,10 @@ def _save_platform_token(project_path: str, platform: str, token: str) -> bool:
 
 def _configure_render(project_path: str, summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Configure Render settings"""
-    info("⚙️  Configuring Render...")
     
     # Get Render API Key
     token_value = questionary.password(
-        "Enter your Render API Key:"
+        "Enter your Render API Key:\n🔗 Get it from: dashboard.render.com/account/api-keys\n🔑 Needs: Full access\n🏷️  Format: rnd_xxxxxxxxxxxx\n"
     ).ask()
     
     if not token_value:

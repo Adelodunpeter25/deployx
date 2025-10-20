@@ -1,5 +1,5 @@
 import questionary
-from utils.ui import header, success, error, info, warning
+from utils.ui import header, success, error, info, warning, smart_error_recovery
 from utils.config import Config
 from commands.init import init_command
 from commands.deploy import deploy_command
@@ -7,15 +7,13 @@ from commands.deploy import deploy_command
 def interactive_command(project_path: str = ".") -> bool:
     """Interactive mode - complete setup and deployment workflow"""
     
-    header("DeployX Interactive Mode")
+    header("Interactive Mode")
     print("🎯 Complete setup and deployment in one go!\n")
     
     config = Config(project_path)
     
     # Step 1: Check if configuration exists
     if config.exists():
-        info("📋 Configuration found")
-        
         # Ask if user wants to reconfigure
         reconfigure = questionary.confirm(
             "Configuration already exists. Do you want to reconfigure?",
@@ -23,13 +21,12 @@ def interactive_command(project_path: str = ".") -> bool:
         ).ask()
         
         if reconfigure:
-            if not _run_init(project_path):
+            if not _run_init(project_path, skip_header=True):
                 return False
         else:
             info("Using existing configuration")
     else:
-        info("📋 No configuration found - starting setup")
-        if not _run_init(project_path):
+        if not _run_init(project_path, skip_header=True):
             return False
     
     # Step 2: Deploy with retry loop
@@ -49,9 +46,19 @@ def interactive_command(project_path: str = ".") -> bool:
             _show_completion_message()
             return True
         
-        # Deployment failed
+        # Deployment failed - try smart recovery first
+        warning(f"❌ Deployment attempt {attempt} failed")
+        
+        # Attempt smart error recovery
+        if smart_error_recovery("Deployment failed", "general"):
+            info("🔄 Retrying after applying fixes...")
+            success_deploy = _run_deploy(project_path)
+            if success_deploy:
+                success("🎉 Recovery successful! Deployment completed!")
+                _show_completion_message()
+                return True
+        
         if attempt < max_attempts:
-            warning(f"❌ Deployment attempt {attempt} failed")
             
             retry_options = [
                 "Retry deployment",
@@ -83,11 +90,10 @@ def interactive_command(project_path: str = ".") -> bool:
     
     return False
 
-def _run_init(project_path: str) -> bool:
+def _run_init(project_path: str, skip_header: bool = False) -> bool:
     """Run initialization with error handling"""
     try:
-        info("🔧 Running initialization...")
-        return init_command(project_path)
+        return init_command(project_path, skip_header=skip_header)
     except Exception as e:
         error(f"❌ Initialization failed: {str(e)}")
         return False
@@ -95,7 +101,6 @@ def _run_init(project_path: str) -> bool:
 def _run_deploy(project_path: str) -> bool:
     """Run deployment with error handling"""
     try:
-        info("🚀 Running deployment...")
         return deploy_command(project_path)
     except Exception as e:
         error(f"❌ Deployment failed: {str(e)}")
