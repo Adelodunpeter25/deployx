@@ -16,7 +16,7 @@ def init_command(project_path: str = ".", skip_header: bool = False) -> bool:
     # Display welcome message
     if not skip_header:
         header("Initialize Configuration")
-        print("🚀 Let's set up deployment for your project!\n")
+        print("🚀 One CLI for all your deployments, stop memorizing platform-specific commands\n")
     
     config = Config(project_path)
     

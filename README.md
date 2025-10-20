@@ -1,10 +1,14 @@
-# 🚀 DeployX - Deploy Anywhere with One Command
+# 🚀 DeployX
+
+One CLI for all your deployments  
+Stop memorizing platform-specific commands
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+DeployX eliminates the complexity of platform-specific deployment commands. Whether you're deploying a React app to Vercel, a static site to GitHub Pages, or a full-stack application to Railway, DeployX provides a unified interface that auto-detects your project type, configures build settings, and handles authentication—all through a single, intuitive command.
 
-A modern CLI tool for deploying web projects to multiple platforms with zero configuration. Deploy your React, Next.js, or static sites to GitHub Pages, Vercel, and Netlify with a single command.
+No more memorizing different CLI tools, configuration formats, or deployment workflows. Just run `deployx deploy` and watch your project go live.
 
 ## ✨ Features
 

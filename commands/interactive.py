@@ -8,7 +8,7 @@ def interactive_command(project_path: str = ".") -> bool:
     """Interactive mode - complete setup and deployment workflow"""
     
     header("Interactive Mode")
-    print("🎯 Complete setup and deployment in one go!\n")
+    print("🎯 One CLI for all your deployments, stop memorizing platform-specific commands\n")
     
     config = Config(project_path)
     

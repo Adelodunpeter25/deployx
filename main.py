@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-DeployX - Deploy Anywhere with One Command
-A CLI tool for deploying projects to multiple platforms
+DeployX - One CLI for all your deployments
+Stop memorizing platform-specific commands
 """
 
 import sys
@@ -21,10 +21,8 @@ from commands.history import history_command
 from utils.ui import header, error, info
 from utils.errors import DeployXError, display_error_with_suggestions
 
-# Import platforms to register them
-
 # Version information
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 @click.group()
 @click.version_option(version=__version__, prog_name="DeployX")
@@ -32,10 +30,10 @@ __version__ = "0.4.0"
 @click.pass_context
 def cli(ctx, verbose):
     """
-    🚀 DeployX - Deploy Anywhere with One Command
+    🚀 DeployX - One CLI for all your deployments
     
-    A modern CLI tool for deploying web projects to multiple platforms
-    including GitHub Pages, Vercel, and Netlify with zero configuration.
+    Stop memorizing platform-specific commands. Deploy to GitHub Pages, 
+    Vercel, Netlify, Railway, and Render with zero configuration.
     
     Examples:
       deployx init                 # Set up deployment configuration

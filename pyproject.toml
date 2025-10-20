@@ -1,7 +1,7 @@
 [project]
 name = "deployx"
-version = "0.4.0"
-description = "Deploy web projects to multiple platforms with one command"
+version = "0.5.0"
+description = "One CLI for all your deployments, stop memorizing platform-specific commands"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
