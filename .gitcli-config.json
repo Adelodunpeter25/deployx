@@ -1,0 +1,17 @@
+{
+  "auto_push": true,
+  "auto_stage": true,
+  "commit_message_template": null,
+  "learn_from_history": true,
+  "pre_save_validation": false,
+  "auto_pull_before_push": false,
+  "auto_fix_formatting": false,
+  "confirm_force_push": true,
+  "validation_rules": {
+    "check_debug": true,
+    "check_secrets": true,
+    "check_conflicts": true,
+    "check_large_files": true,
+    "max_file_size_mb": 10
+  }
+}
