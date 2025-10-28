@@ -1,5 +1,12 @@
 """
-Deployment history commands for DeployX
+Deployment history commands for DeployX.
+
+Tracks and displays deployment history with timestamps, status,
+and deployment details. History is stored locally in .deployx_history.json.
+
+Example:
+    >>> from commands.history import history_command
+    >>> history_command("./my-project", limit=10)
 """
 
 import json
@@ -9,9 +16,25 @@ from typing import List, Dict, Any, Optional
 from utils.ui import header, error, info, warning
 from utils.config import Config
 
+
 def history_command(project_path: str = ".", limit: Optional[int] = None) -> bool:
-    """Show deployment history"""
+    """
+    Show deployment history.
     
+    Displays past deployments with timestamps, status, URLs, and duration.
+    History is stored in .deployx_history.json file.
+    
+    Args:
+        project_path: Path to project directory (default: current directory)
+        limit: Maximum number of deployments to show (default: all)
+    
+    Returns:
+        True if successful, False otherwise
+    
+    Example:
+        >>> history_command("./my-app", limit=5)
+        True
+    """
     config = Config(project_path)
     
     if not config.exists():
@@ -42,8 +65,28 @@ def history_command(project_path: str = ".", limit: Optional[int] = None) -> boo
         error(f"❌ Failed to load history: {str(e)}")
         return False
 
+
 def add_to_history(project_path: str, deployment_data: Dict[str, Any]) -> None:
-    """Add deployment to history"""
+    """
+    Add deployment to history.
+    
+    Records deployment information to history file. Automatically
+    adds timestamp if not present. Keeps only last 50 deployments.
+    
+    Args:
+        project_path: Path to project directory
+        deployment_data: Dict with deployment information (platform, status, url, etc.)
+    
+    Note:
+        Silently fails if history cannot be saved (doesn't break deployment)
+    
+    Example:
+        >>> add_to_history("./my-app", {
+        ...     'platform': 'github',
+        ...     'status': 'success',
+        ...     'url': 'https://myapp.github.io'
+        ... })
+    """
     try:
         history = _load_history(project_path)
         
@@ -66,8 +109,17 @@ def add_to_history(project_path: str, deployment_data: Dict[str, Any]) -> None:
         # Don't fail deployment if history fails
         pass
 
+
 def _load_history(project_path: str) -> List[Dict[str, Any]]:
-    """Load deployment history from file"""
+    """
+    Load deployment history from file.
+    
+    Args:
+        project_path: Path to project directory
+    
+    Returns:
+        List of deployment dictionaries (empty if file doesn't exist)
+    """
     history_file = Path(project_path) / ".deployx_history.json"
     
     if not history_file.exists():
@@ -79,15 +131,30 @@ def _load_history(project_path: str) -> List[Dict[str, Any]]:
     except Exception:
         return []
 
+
 def _save_history(project_path: str, history: List[Dict[str, Any]]) -> None:
-    """Save deployment history to file"""
+    """
+    Save deployment history to file.
+    
+    Args:
+        project_path: Path to project directory
+        history: List of deployment dictionaries
+    """
     history_file = Path(project_path) / ".deployx_history.json"
     
     with open(history_file, 'w') as f:
         json.dump(history, f, indent=2)
 
+
 def _add_to_gitignore(project_path: str) -> None:
-    """Add history file to .gitignore"""
+    """
+    Add history file to .gitignore.
+    
+    Ensures .deployx_history.json is not committed to git.
+    
+    Args:
+        project_path: Path to project directory
+    """
     try:
         gitignore_path = Path(project_path) / ".gitignore"
         history_entry = ".deployx_history.json"
@@ -104,8 +171,18 @@ def _add_to_gitignore(project_path: str) -> None:
     except Exception:
         pass
 
+
 def _display_deployment(deployment: Dict[str, Any], index: int) -> None:
-    """Display a single deployment entry"""
+    """
+    Display a single deployment entry.
+    
+    Formats and prints deployment information with appropriate emojis
+    and formatting.
+    
+    Args:
+        deployment: Deployment dictionary
+        index: Display index number
+    """
     timestamp = deployment.get('timestamp', 'Unknown')
     platform = deployment.get('platform', 'Unknown')
     status = deployment.get('status', 'Unknown')

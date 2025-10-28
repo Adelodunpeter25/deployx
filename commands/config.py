@@ -1,5 +1,12 @@
 """
-Configuration management commands for DeployX
+Configuration management commands for DeployX.
+
+Provides commands to view, edit, and validate deployx.yml configuration files.
+Helps users manage their deployment settings without manual file editing.
+
+Example:
+    >>> from commands.config import config_show_command
+    >>> config_show_command("./my-project")
 """
 
 import os
@@ -9,9 +16,24 @@ from utils.ui import header, success, error, info, print_config_summary
 from utils.config import Config
 from utils.validator import validate_config
 
+
 def config_show_command(project_path: str = ".") -> bool:
-    """Show current configuration"""
+    """
+    Show current configuration.
     
+    Displays the contents of deployx.yml in a formatted view
+    with project, build, and platform settings.
+    
+    Args:
+        project_path: Path to project directory (default: current directory)
+    
+    Returns:
+        True if successful, False otherwise
+    
+    Example:
+        >>> config_show_command("./my-app")
+        True
+    """
     config = Config(project_path)
     
     if not config.exists():
@@ -34,9 +56,27 @@ def config_show_command(project_path: str = ".") -> bool:
         error(f"❌ Failed to load configuration: {str(e)}")
         return False
 
+
 def config_edit_command(project_path: str = ".") -> bool:
-    """Edit configuration file"""
+    """
+    Edit configuration file.
     
+    Opens deployx.yml in the system's default editor (from EDITOR env var).
+    Automatically validates configuration after editing.
+    
+    Args:
+        project_path: Path to project directory (default: current directory)
+    
+    Returns:
+        True if edit and validation successful, False otherwise
+    
+    Note:
+        Uses $EDITOR environment variable, defaults to 'nano' if not set.
+    
+    Example:
+        >>> config_edit_command("./my-app")
+        True
+    """
     config = Config(project_path)
     config_file = Path(project_path) / "deployx.yml"
     
@@ -70,9 +110,24 @@ def config_edit_command(project_path: str = ".") -> bool:
         error(f"❌ Failed to edit configuration: {str(e)}")
         return False
 
+
 def config_validate_command(project_path: str = ".") -> bool:
-    """Validate configuration without deploying"""
+    """
+    Validate configuration without deploying.
     
+    Checks deployx.yml for required fields, valid platform names,
+    and supported project types. Useful before deployment.
+    
+    Args:
+        project_path: Path to project directory (default: current directory)
+    
+    Returns:
+        True if configuration is valid, False otherwise
+    
+    Example:
+        >>> config_validate_command("./my-app")
+        True
+    """
     config = Config(project_path)
     
     if not config.exists():

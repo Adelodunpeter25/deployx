@@ -12,7 +12,16 @@ Example:
 """
 
 from typing import Dict, Any, List
-from constants import SUPPORTED_PLATFORMS, SUPPORTED_PROJECT_TYPES
+
+try:
+    from constants import SUPPORTED_PLATFORMS, SUPPORTED_PROJECT_TYPES
+except ImportError:
+    # Fallback if constants not available
+    SUPPORTED_PLATFORMS = ["github", "vercel", "netlify", "railway", "render"]
+    SUPPORTED_PROJECT_TYPES = [
+        "react", "vue", "static", "nextjs", "python", 
+        "django", "flask", "fastapi", "nodejs", "angular", "vite"
+    ]
 
 # Required fields for each configuration section
 REQUIRED_FIELDS = {

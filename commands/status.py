@@ -1,3 +1,15 @@
+"""
+Status command for DeployX.
+
+Checks and displays current deployment status from the configured platform.
+Shows project information, deployment state, live URL, and troubleshooting tips.
+
+Example:
+    >>> from commands.status import status_command
+    >>> status_command("./my-project")
+    True
+"""
+
 from typing import Optional
 from datetime import datetime
 
@@ -5,9 +17,24 @@ from utils.ui import header, success, error, info
 from utils.config import Config
 from platforms.factory import get_platform
 
+
 def status_command(project_path: str = ".") -> bool:
-    """Check deployment status for configured platform"""
+    """
+    Check deployment status for configured platform.
     
+    Validates credentials, fetches current deployment status,
+    and displays detailed information with troubleshooting tips.
+    
+    Args:
+        project_path: Path to project directory (default: current directory)
+    
+    Returns:
+        True if status check successful, False otherwise
+    
+    Example:
+        >>> status_command("./my-app")
+        True
+    """
     config = Config(project_path)
     
     # Check if configuration exists
@@ -69,8 +96,60 @@ def status_command(project_path: str = ".") -> bool:
     
     return True
 
+
+def quick_status_command(project_path: str = ".") -> Optional[str]:
+    """
+    Get quick status for CI/CD pipelines.
+    
+    Returns just the status string without displaying output.
+    Useful for automated checks and scripts.
+    
+    Args:
+        project_path: Path to project directory (default: current directory)
+    
+    Returns:
+        Status string ('ready', 'building', 'error', 'auth_failed') or None if no config
+    
+    Example:
+        >>> status = quick_status_command("./my-app")
+        >>> if status == 'ready':
+        ...     print("Deployment is live")
+    """
+    config = Config(project_path)
+    
+    if not config.exists():
+        return None
+    
+    try:
+        config_data = config.load()
+        platform_name = config_data.get('platform')
+        platform_config = config_data.get(platform_name, {})
+        
+        platform = get_platform(platform_name, platform_config)
+        
+        # Quick validation
+        valid, _ = platform.validate_credentials()
+        if not valid:
+            return 'auth_failed'
+        
+        status = platform.get_status()
+        return status.status
+        
+    except Exception:
+        return 'error'
+
+
 def _display_status_info(config_data: dict, status, platform) -> None:
-    """Display formatted status information"""
+    """
+    Display formatted status information.
+    
+    Shows project details, deployment status, URL, and last update time.
+    
+    Args:
+        config_data: Configuration dictionary
+        status: DeploymentStatus object
+        platform: Platform instance
+    """
     project = config_data.get('project', {})
     platform_name = config_data.get('platform')
     platform_config = config_data.get(platform_name, {})
@@ -80,6 +159,7 @@ def _display_status_info(config_data: dict, status, platform) -> None:
     print(f"   Type: {project.get('type', 'Unknown')}")
     print(f"   Platform: {platform_name}")
     
+    # Platform-specific configuration details
     if platform_name == 'github':
         print(f"   Repository: {platform_config.get('repo', 'Not configured')}")
         print(f"   Branch: {platform_config.get('branch', 'gh-pages')}")
@@ -99,7 +179,7 @@ def _display_status_info(config_data: dict, status, platform) -> None:
     else:
         print("   URL: Not available")
     
-    # Last updated
+    # Last updated timestamp
     if status.last_updated:
         try:
             # Parse ISO format datetime
@@ -119,8 +199,17 @@ def _display_status_info(config_data: dict, status, platform) -> None:
     if platform_name == 'github':
         _display_github_specific_info(platform_config)
 
+
 def _format_status(status: str) -> str:
-    """Format status with appropriate icon and description"""
+    """
+    Format status with appropriate icon and description.
+    
+    Args:
+        status: Status string from platform
+    
+    Returns:
+        Formatted status string with emoji and description
+    """
     status_map = {
         'ready': '🟢 Ready (Live)',
         'building': '🟡 Building (In Progress)', 
@@ -130,8 +219,16 @@ def _format_status(status: str) -> str:
     
     return status_map.get(status, f"❓ {status.title()}")
 
+
 def _display_github_specific_info(platform_config: dict) -> None:
-    """Display GitHub-specific status information"""
+    """
+    Display GitHub Pages specific status information.
+    
+    Shows source configuration and helpful tips about GitHub Pages behavior.
+    
+    Args:
+        platform_config: GitHub platform configuration
+    """
     print("\n🐙 GitHub Pages Info:")
     
     method = platform_config.get('method', 'branch')
@@ -145,8 +242,16 @@ def _display_github_specific_info(platform_config: dict) -> None:
     
     print("   🔗 GitHub Pages may take 1-10 minutes to update after deployment")
 
+
 def _show_auth_troubleshooting(platform_name: str) -> None:
-    """Show authentication troubleshooting tips"""
+    """
+    Show authentication troubleshooting tips.
+    
+    Provides platform-specific guidance for resolving authentication issues.
+    
+    Args:
+        platform_name: Name of the platform
+    """
     print("\n🔧 Authentication Troubleshooting:")
     
     if platform_name == 'github':
@@ -156,8 +261,17 @@ def _show_auth_troubleshooting(platform_name: str) -> None:
         print("   • Token may have expired - run 'deployx init' to update")
         print("   • Check repository exists and you have write access")
 
+
 def _show_status_troubleshooting(status, platform_name: str) -> None:
-    """Show status-specific troubleshooting tips"""
+    """
+    Show status-specific troubleshooting tips.
+    
+    Provides guidance based on current deployment status and platform.
+    
+    Args:
+        status: DeploymentStatus object
+        platform_name: Name of the platform
+    """
     print("\n🔧 Troubleshooting Tips:")
     
     if status.status == 'error':
@@ -182,28 +296,3 @@ def _show_status_troubleshooting(status, platform_name: str) -> None:
         print("   • Deployment is in progress, please wait")
         print("   • Large sites may take several minutes to build")
         print("   • Run this command again in a few minutes")
-
-def quick_status_command(project_path: str = ".") -> Optional[str]:
-    """Get quick status for CI/CD (returns just the status string)"""
-    config = Config(project_path)
-    
-    if not config.exists():
-        return None
-    
-    try:
-        config_data = config.load()
-        platform_name = config_data.get('platform')
-        platform_config = config_data.get(platform_name, {})
-        
-        platform = get_platform(platform_name, platform_config)
-        
-        # Quick validation
-        valid, _ = platform.validate_credentials()
-        if not valid:
-            return 'auth_failed'
-        
-        status = platform.get_status()
-        return status.status
-        
-    except Exception:
-        return 'error'
