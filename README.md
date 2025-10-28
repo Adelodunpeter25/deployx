@@ -21,6 +21,7 @@ No more memorizing different CLI tools, configuration formats, or deployment wor
 - 📋 **Deployment Logs** - View and stream deployment logs in real-time
 - ⚙️ **Configuration Management** - Show, edit, and validate configurations
 - 📊 **Deployment History** - Track past deployments with timestamps and status
+- 🔙 **Rollback Support** - Revert to previous deployments with one command
 - 🔍 **Dry Run Mode** - Preview deployments without executing them
 
 ## 🚀 Quick Start
@@ -110,6 +111,10 @@ deployx config edit
 
 # View deployment history
 deployx history --limit 10
+
+# Rollback to previous deployment
+deployx rollback                # Interactive selection
+deployx rollback --target 2     # Rollback to 2nd previous deployment
 ```
 
 Use `deployx [command] --help` for detailed options.

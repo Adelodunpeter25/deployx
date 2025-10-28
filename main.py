@@ -51,6 +51,7 @@ from commands.interactive import interactive_command
 from commands.logs import logs_command
 from commands.config import config_show_command, config_edit_command, config_validate_command
 from commands.history import history_command
+from commands.rollback import rollback_command
 from utils.ui import header, error, info
 from utils.errors import DeployXError, display_error_with_suggestions
 
@@ -390,6 +391,47 @@ def history(ctx, path, limit):
             traceback.print_exc()
         else:
             error(f"❌ History command failed: {str(e)}")
+        sys.exit(1)
+
+@cli.command()
+@click.option('--path', '-p', default='.', help='Project path (default: current directory)')
+@click.option('--target', '-t', type=int, help='Deployment index to rollback to')
+@click.pass_context
+def rollback(ctx, path, target):
+    """
+    🔄 Rollback to a previous deployment.
+    
+    ┌─ What this command does ─────────────────────────────────────────┐
+    │ • Shows list of previous successful deployments                  │
+    │ • Allows selection of deployment to rollback to                  │
+    │ • Redeploys the selected version                                 │
+    │ • Updates live site immediately                                  │
+    └──────────────────────────────────────────────────────────────────┘
+    
+    ┌─ Examples ───────────────────────────────────────────────────────┐
+    │ deployx rollback             # Interactive selection             │
+    │ deployx rollback --target 2  # Rollback to 2nd previous deploy  │
+    └──────────────────────────────────────────────────────────────────┘
+    
+    ⚠️  Warning: This will overwrite your current deployment!
+    """
+    try:
+        success_result = rollback_command(path, target_index=target)
+        sys.exit(0 if success_result else 1)
+    except KeyboardInterrupt:
+        error("\n❌ Rollback cancelled by user")
+        sys.exit(1)
+    except DeployXError as e:
+        display_error_with_suggestions(e)
+        sys.exit(1)
+    except Exception as e:
+        if ctx.obj.get('verbose'):
+            import traceback
+            error(f"❌ Rollback failed: {str(e)}")
+            traceback.print_exc()
+        else:
+            error(f"❌ Rollback failed: {str(e)}")
+            error("Use --verbose for detailed error information")
         sys.exit(1)
 
 @cli.command()
