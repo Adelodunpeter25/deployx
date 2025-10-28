@@ -12,3 +12,6 @@ wheels/
 # docs
 CONTRIBUTING.md
 LICENSE
+
+# others
+.gitcli-config.json
