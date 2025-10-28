@@ -29,11 +29,23 @@ No more memorizing different CLI tools, configuration formats, or deployment wor
 ### Installation
 
 ```bash
-# Install with uv (recommended)
+# Quick install with curl (recommended)
+curl -fsSL https://raw.githubusercontent.com/Adelodunpeter25/deployx/main/install.sh | bash
+
+# Or install with pip
+pip install deployx
+
+# Or with uv
 uv add deployx
+```
+
+**Uninstall:**
+```bash
+# Using uninstall script
+curl -fsSL https://raw.githubusercontent.com/Adelodunpeter25/deployx/main/uninstall.sh | bash
 
 # Or with pip
-pip install deployx
+pip uninstall deployx
 ```
 
 ### First Deployment
