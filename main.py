@@ -56,7 +56,7 @@ from utils.ui import header, error, info
 from utils.errors import DeployXError, display_error_with_suggestions
 
 # Version information
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 @click.group()
 @click.version_option(version=__version__, prog_name="DeployX")
