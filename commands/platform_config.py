@@ -111,6 +111,10 @@ def configure_vercel(project_path: str, summary: Dict[str, Any],
         default=get_name_func(project_path, summary).lower().replace('_', '-')
     ).ask()
     
+    if not project_name:
+        error("Project name is required")
+        return None
+    
     # Root directory for monorepos
     root_directory = questionary.text(
         "Root directory (leave empty if project is in root):"
@@ -216,11 +220,19 @@ def configure_railway(project_path: str, summary: Dict[str, Any],
         default=get_name_func(project_path, summary)
     ).ask()
     
+    if not project_name:
+        error("Project name is required")
+        return None
+    
     # Service name
     service_name = questionary.text(
         "Service name:",
         default="web"
     ).ask()
+    
+    if not service_name:
+        error("Service name is required")
+        return None
     
     # Application type
     app_type = questionary.select(
@@ -232,6 +244,10 @@ def configure_railway(project_path: str, summary: Dict[str, Any],
             questionary.Choice("Static site", "static")
         ]
     ).ask()
+    
+    if not app_type:
+        error("Application type is required")
+        return None
     
     # Start command (for web services)
     start_command = None
@@ -299,10 +315,14 @@ def configure_render(project_path: str, summary: Dict[str, Any],
         default=get_name_func(project_path, summary).lower().replace('_', '-')
     ).ask()
     
+    if not service_name:
+        error("Service name is required")
+        return None
+    
     # Build command
     build_command = questionary.text(
         "Build command (leave empty to skip):",
-        default=summary.get('build_command', '')
+        default=summary.get('build_command', '') or ''
     ).ask()
     
     # Environment
@@ -317,6 +337,10 @@ def configure_render(project_path: str, summary: Dict[str, Any],
             questionary.Choice("Docker", "docker")
         ]
     ).ask()
+    
+    if not environment:
+        error("Environment selection is required")
+        return None
     
     config = {
         "name": service_name,
