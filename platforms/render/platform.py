@@ -8,17 +8,19 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 from ..base import BasePlatform, DeploymentResult, DeploymentStatus
+from ..env_interface import PlatformEnvInterface
 from .api import RenderAPIClient
 from .detector import RenderServiceDetector
 from utils.errors import AuthenticationError
 from utils.config import Config
 from core.logging import get_logger
 
-class RenderPlatform(BasePlatform):
+class RenderPlatform(BasePlatform, PlatformEnvInterface):
     """Render deployment platform with auto-service creation."""
     
     def __init__(self, config: Dict[str, Any]):
-        super().__init__(config)
+        BasePlatform.__init__(self, config)
+        PlatformEnvInterface.__init__(self)
         self.api_base = "https://api.render.com/v1"
         self.project_path = config.get('project_path', '.')
         self.token = self._get_token()
@@ -203,6 +205,94 @@ class RenderPlatform(BasePlatform):
                 
         except Exception as e:
             return DeploymentResult(success=False, message=f"Deployment failed: {str(e)}")
+    
+    def set_environment_variables(self, env_vars: Dict[str, str]) -> Tuple[bool, str]:
+        """Set environment variables for Render service."""
+        try:
+            if not self.service_id:
+                return False, "No service ID configured"
+            
+            # Validate variables
+            is_valid, error_msg = self.validate_environment_variables(env_vars)
+            if not is_valid:
+                return False, error_msg
+            
+            headers = {
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json"
+            }
+            
+            # Convert to Render API format
+            env_vars_list = [{"key": key, "value": value} for key, value in env_vars.items()]
+            
+            response = requests.patch(
+                f"{self.api_base}/services/{self.service_id}",
+                json={"envVars": env_vars_list},
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                return True, f"Successfully set {len(env_vars)} environment variables"
+            else:
+                error_data = response.json() if response.content else {}
+                error_msg = error_data.get("message", f"HTTP {response.status_code}")
+                return False, f"Failed to set environment variables: {error_msg}"
+                
+        except Exception as e:
+            error_msg = f"Failed to set Render environment variables: {str(e)}"
+            self.logger.error(error_msg)
+            return False, error_msg
+    
+    def get_environment_variables(self) -> Tuple[bool, Dict[str, str], str]:
+        """Get environment variables from Render service."""
+        try:
+            if not self.service_id:
+                return False, {}, "No service ID configured"
+            
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            response = requests.get(
+                f"{self.api_base}/services/{self.service_id}",
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                service_data = response.json()
+                env_vars = {}
+                
+                # Extract environment variables
+                for env_var in service_data.get("envVars", []):
+                    env_vars[env_var["key"]] = env_var["value"]
+                
+                return True, env_vars, ""
+            else:
+                error_msg = f"Failed to get service details: HTTP {response.status_code}"
+                return False, {}, error_msg
+                
+        except Exception as e:
+            error_msg = f"Failed to get Render environment variables: {str(e)}"
+            self.logger.error(error_msg)
+            return False, {}, error_msg
+    
+    def delete_environment_variable(self, key: str) -> Tuple[bool, str]:
+        """Delete an environment variable from Render service."""
+        try:
+            # Get current variables
+            success, current_vars, error = self.get_environment_variables()
+            if not success:
+                return False, f"Failed to get current variables: {error}"
+            
+            if key not in current_vars:
+                return False, f"Environment variable '{key}' not found"
+            
+            # Remove the key and update
+            del current_vars[key]
+            return self.set_environment_variables(current_vars)
+            
+        except Exception as e:
+            error_msg = f"Failed to delete Render environment variable {key}: {str(e)}"
+            self.logger.error(error_msg)
+            return False, error_msg
     
     def get_deployment_status(self) -> DeploymentStatus:
         """Get deployment status."""

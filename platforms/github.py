@@ -18,10 +18,10 @@ from utils.errors import (
     retry_with_backoff, handle_auth_error, handle_build_error, 
     handle_git_error, handle_github_api_error
 )
-
 from .base import BasePlatform, DeploymentResult, DeploymentStatus
+from .env_interface import PlatformEnvInterface
 
-class GitHubPlatform(BasePlatform):
+class GitHubPlatform(BasePlatform, PlatformEnvInterface):
     """
     GitHub Pages deployment platform.
     
@@ -36,13 +36,87 @@ class GitHubPlatform(BasePlatform):
         Args:
             config: GitHub-specific configuration including repo, branch, method
         """
-        super().__init__(config)
+        BasePlatform.__init__(self, config)
+        PlatformEnvInterface.__init__(self)
         self.token = self._get_token()
         self.repo_name = config.get('repo')
         self.method = config.get('method', 'branch')  # 'branch' or 'docs'
         self.branch = config.get('branch', 'gh-pages')
         self.github_client = None
         self.repo_obj = None
+    
+    def set_environment_variables(self, env_vars: Dict[str, str]) -> Tuple[bool, str]:
+        """Set environment variables as GitHub repository secrets."""
+        try:
+            if not self.repo_obj:
+                valid, _ = self.validate_credentials()
+                if not valid:
+                    return False, "Failed to authenticate with GitHub"
+            
+            # Validate variables
+            is_valid, error_msg = self.validate_environment_variables(env_vars)
+            if not is_valid:
+                return False, error_msg
+            
+            success_count = 0
+            failed_vars = []
+            
+            for key, value in env_vars.items():
+                try:
+                    # Create or update repository secret
+                    self.repo_obj.create_secret(key, value)
+                    success_count += 1
+                    self.logger.info(f"Set GitHub secret: {key}")
+                except Exception as e:
+                    failed_vars.append(f"{key}: {str(e)}")
+                    self.logger.error(f"Failed to set GitHub secret {key}: {e}")
+            
+            if failed_vars:
+                return False, f"Failed to set {len(failed_vars)} variables: {'; '.join(failed_vars)}"
+            
+            return True, f"Successfully set {success_count} repository secrets"
+            
+        except Exception as e:
+            error_msg = f"Failed to set GitHub secrets: {str(e)}"
+            self.logger.error(error_msg)
+            return False, error_msg
+    
+    def get_environment_variables(self) -> Tuple[bool, Dict[str, str], str]:
+        """Get repository secrets (names only, values are not accessible)."""
+        try:
+            if not self.repo_obj:
+                valid, _ = self.validate_credentials()
+                if not valid:
+                    return False, {}, "Failed to authenticate with GitHub"
+            
+            secrets = self.repo_obj.get_secrets()
+            # GitHub API only returns secret names, not values
+            secret_names = {secret.name: "(hidden)" for secret in secrets}
+            
+            return True, secret_names, ""
+            
+        except Exception as e:
+            error_msg = f"Failed to get GitHub secrets: {str(e)}"
+            self.logger.error(error_msg)
+            return False, {}, error_msg
+    
+    def delete_environment_variable(self, key: str) -> Tuple[bool, str]:
+        """Delete a repository secret."""
+        try:
+            if not self.repo_obj:
+                valid, _ = self.validate_credentials()
+                if not valid:
+                    return False, "Failed to authenticate with GitHub"
+            
+            secret = self.repo_obj.get_secret(key)
+            secret.delete()
+            
+            return True, f"Deleted GitHub secret: {key}"
+            
+        except Exception as e:
+            error_msg = f"Failed to delete GitHub secret {key}: {str(e)}"
+            self.logger.error(error_msg)
+            return False, error_msg
     
     def _get_token(self) -> Optional[str]:
         """

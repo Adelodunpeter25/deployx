@@ -16,12 +16,13 @@ non-blocking operations where appropriate.
 """
 import asyncio
 from pathlib import Path
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple
 from .logging import get_logger
 from .models import DeployXConfig
 from utils.config import Config
 from platforms.factory import get_platform
 from detectors.project import detect_project
+from commands.env_config import EnvConfigurator
 
 logger = get_logger(__name__)
 
@@ -114,6 +115,18 @@ class DeploymentService:
             valid, message = await asyncio.to_thread(platform.validate_credentials)
             if not valid:
                 return False, f"Credential validation failed: {message}"
+            
+            # Configure environment variables if platform supports it
+            if hasattr(platform, 'set_environment_variables'):
+                env_configurator = EnvConfigurator(str(self.project_path))
+                
+                if not force:  # Only ask if not forcing deployment
+                    env_success, env_message = await asyncio.to_thread(
+                        env_configurator.configure_environment_variables,
+                        platform, config.platform
+                    )
+                    if not env_success:
+                        self.logger.warning(f"Environment variable setup failed: {env_message}")
             
             # Prepare deployment
             self.logger.info("Preparing deployment")
