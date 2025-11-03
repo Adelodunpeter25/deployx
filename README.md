@@ -36,7 +36,7 @@ curl -fsSL https://raw.githubusercontent.com/Adelodunpeter25/deployx/main/instal
 # Or install with pip
 pip install deployx
 
-# Or with uv (recommended)
+# Or with uv
 uv add deployx
 ```
 
