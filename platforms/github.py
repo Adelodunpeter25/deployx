@@ -1,3 +1,10 @@
+"""
+GitHub Pages deployment platform implementation.
+
+This module provides GitHub Pages deployment functionality including
+authentication, repository management, and GitHub Pages configuration.
+Supports both branch-based and docs folder deployment methods.
+"""
 import os
 import shutil
 import subprocess
@@ -15,9 +22,20 @@ from utils.errors import (
 from .base import BasePlatform, DeploymentResult, DeploymentStatus
 
 class GitHubPlatform(BasePlatform):
-    """GitHub Pages deployment platform"""
+    """
+    GitHub Pages deployment platform.
+    
+    Handles deployment to GitHub Pages using either branch-based deployment
+    (gh-pages branch) or docs folder deployment (main branch /docs folder).
+    """
     
     def __init__(self, config: Dict[str, Any]):
+        """
+        Initialize GitHub platform with configuration.
+        
+        Args:
+            config: GitHub-specific configuration including repo, branch, method
+        """
         super().__init__(config)
         self.token = self._get_token()
         self.repo_name = config.get('repo')
@@ -27,7 +45,12 @@ class GitHubPlatform(BasePlatform):
         self.repo_obj = None
     
     def _get_token(self) -> Optional[str]:
-        """Get GitHub token from .deployx_token file or environment"""
+        """
+        Get GitHub token from .deployx_token file or environment.
+        
+        Returns:
+            GitHub token string or None if not found
+        """
         # Try .deployx_token file first
         token_file = Path('.deployx_token')
         if token_file.exists():
@@ -42,7 +65,12 @@ class GitHubPlatform(BasePlatform):
     
     @retry_with_backoff(max_retries=3)
     def validate_credentials(self) -> Tuple[bool, str]:
-        """Validate GitHub token and repository access"""
+        """
+        Validate GitHub token and repository access.
+        
+        Returns:
+            Tuple of (is_valid, message)
+        """
         if not self.token:
             error = handle_auth_error("github", "No token provided")
             return False, error.message
@@ -113,7 +141,17 @@ class GitHubPlatform(BasePlatform):
             )
     
     def prepare_deployment(self, project_path: str, build_command: Optional[str], output_dir: str) -> Tuple[bool, str]:
-        """Prepare deployment by building project and checking files"""
+        """
+        Prepare deployment by building project and checking files.
+        
+        Args:
+            project_path: Path to project directory
+            build_command: Command to build project (None if no build needed)
+            output_dir: Directory containing built files
+            
+        Returns:
+            Tuple of (success, message)
+        """
         project_path = Path(project_path)
         output_path = project_path / output_dir
         

@@ -14,17 +14,6 @@ Features:
     - Build process management
     - Error recovery and retry logic
     - Real-time progress feedback
-
-Functions:
-    - deploy_command: Main deployment function
-    - redeploy_command: Force deployment without confirmation
-    - _show_deployment_summary: Display deployment preview
-    - _show_dry_run_summary: Show dry-run results
-    - _open_deployment_url: Open deployed site in browser
-
-Example:
-    >>> from commands.deploy import deploy_command
-    >>> success = deploy_command("./my-project", dry_run=True)
 """
 import time
 import webbrowser

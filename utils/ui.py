@@ -1,3 +1,10 @@
+"""
+User interface utilities for DeployX.
+
+This module provides rich terminal UI components including progress indicators,
+status messages, spinners, and interactive prompts. Uses the Rich library
+for enhanced terminal output with colors, animations, and formatting.
+"""
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 from rich.panel import Panel
@@ -11,14 +18,25 @@ import subprocess
 console = Console()
 
 def success(message: str, celebrate: bool = False) -> None:
-    """Display success message with green checkmark"""
+    """
+    Display success message with green checkmark.
+    
+    Args:
+        message: Success message to display
+        celebrate: Show celebration animation if True
+    """
     if celebrate:
         _show_celebration(message)
     else:
         console.print(f"✓ {message}", style="bold green")
 
 def _show_celebration(message: str) -> None:
-    """Show celebratory animation for major successes"""
+    """
+    Show celebratory animation for major successes.
+    
+    Args:
+        message: Success message to display with animation
+    """
     # Celebration emojis animation
     celebration_frames = [
         "🎉 🎊 🚀",
@@ -42,7 +60,13 @@ def _show_celebration(message: str) -> None:
     console.print("🌟 " + "─" * 50 + " 🌟", style="yellow")
 
 def error(message: str, error_type: str = "general") -> None:
-    """Display error message with enhanced styling and icons"""
+    """
+    Display error message with enhanced styling and icons.
+    
+    Args:
+        message: Error message to display
+        error_type: Type of error for appropriate icon selection
+    """
     error_icons = {
         "auth": "🔐",
         "network": "🌐", 
@@ -60,15 +84,30 @@ def error(message: str, error_type: str = "general") -> None:
         console.print("🚨 " + "─" * 50 + " 🚨", style="red")
 
 def info(message: str) -> None:
-    """Display info message with blue info icon"""
+    """
+    Display info message with blue info icon.
+    
+    Args:
+        message: Information message to display
+    """
     console.print(f"ℹ {message}", style="bold blue")
 
 def warning(message: str) -> None:
-    """Display warning message with yellow warning icon"""
+    """
+    Display warning message with yellow warning icon.
+    
+    Args:
+        message: Warning message to display
+    """
     console.print(f"⚠ {message}", style="bold yellow")
 
 def header(title: str) -> None:
-    """Display header with ASCII art and command title"""
+    """
+    Display header with ASCII art and command title.
+    
+    Args:
+        title: Title to display in the header panel
+    """
     # Always show ASCII art first
     ascii_art = """
 ██████╗ ███████╗██████╗ ██╗      ██████╗ ██╗   ██╗██╗  ██╗
@@ -83,13 +122,27 @@ def header(title: str) -> None:
 
 @contextmanager
 def spinner(message: str, platform: str = "general"):
-    """Context manager for loading spinner with platform styling"""
+    """
+    Context manager for loading spinner with platform styling.
+    
+    Args:
+        message: Message to display with spinner
+        platform: Platform name for styling
+    """
     style = get_platform_style(platform)
     with console.status(f"[{style}]{message}...[/{style}]"):
         yield
 
 def progress_bar(description: str = "Processing"):
-    """Create progress bar for deployments"""
+    """
+    Create progress bar for deployments.
+    
+    Args:
+        description: Description text for the progress bar
+        
+    Returns:
+        Rich Progress instance
+    """
     return Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
