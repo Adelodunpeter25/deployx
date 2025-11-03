@@ -4,12 +4,6 @@ Configuration management for DeployX.
 This module handles loading, saving, and validating deployx.yml
 configuration files. It provides a simple interface for accessing
 project and platform-specific settings.
-
-Example:
-    >>> config = Config("./my-project")
-    >>> if config.exists():
-    ...     data = config.load()
-    ...     platform = data.get('platform')
 """
 
 import yaml
@@ -32,11 +26,6 @@ class Config:
         project_path: Path to the project directory
         config_path: Full path to deployx.yml file
         _data: Cached configuration data (empty dict if not loaded)
-    
-    Example:
-        >>> config = Config("./my-project")
-        >>> config.save({"platform": "github"})
-        >>> data = config.load()
     """
     
     def __init__(self, project_path: str = "."):
@@ -152,11 +141,6 @@ def create_default_config(project_name: str, project_type: str, platform: str) -
     
     Returns:
         Dict containing default configuration structure
-    
-    Example:
-        >>> config = create_default_config("my-app", "react", "github")
-        >>> config['project']['name']
-        'my-app'
     """
     return {
         "project": {

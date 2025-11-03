@@ -16,7 +16,6 @@ No more memorizing different CLI tools, configuration formats, or deployment wor
 - 🔧 **Framework Support** - React, Vue, Next.js, Angular, Django, Flask, FastAPI
 - 📦 **Package Manager Detection** - npm, yarn, pnpm, bun, pip, poetry, pipenv, uv
 - 🎨 **Beautiful CLI** - Rich terminal output with progress bars and spinners
-- 🛡️ **Error Handling** - Clear error messages with actionable solutions
 - 🔄 **CI/CD Ready** - Perfect for automated deployments
 - 📋 **Deployment Logs** - View and stream deployment logs in real-time
 - ⚙️ **Configuration Management** - Show, edit, and validate configurations
@@ -152,7 +151,7 @@ github:
   branch: "gh-pages"
 ```
 
-Other platforms (Vercel, Netlify, Railway, Render) use similar simple configurations.
+Other platforms (Vercel, Netlify, Railway, Render) use similar configurations.
 
 ## 🔧 Platform Setup
 
@@ -182,12 +181,6 @@ Follow PEP 8, add type hints, add docstrings and write tests for new features.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- Built with [Click](https://click.palletsprojects.com/) for CLI framework
-- [Rich](https://rich.readthedocs.io/) for beautiful terminal output
-- [PyGithub](https://pygithub.readthedocs.io/) for GitHub API integration
-
 ---
 
-Made with ❤️ by the DeployX team
+Made with ❤️ by Adelodun Peter

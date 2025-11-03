@@ -9,13 +9,6 @@ To add a new platform:
 2. Subclass BasePlatform
 3. Implement all abstract methods
 4. Register in platforms/factory.py
-
-Example:
-    >>> from platforms.base import BasePlatform, DeploymentResult
-    >>> class MyPlatform(BasePlatform):
-    ...     def validate_credentials(self):
-    ...         return True, "Valid"
-    ...     # ... implement other methods
 """
 
 from abc import ABC, abstractmethod
@@ -33,13 +26,6 @@ class DeploymentResult:
         url: Live URL of deployed site (if available)
         message: Human-readable status message
         deployment_id: Platform-specific deployment identifier
-    
-    Example:
-        >>> result = DeploymentResult(
-        ...     success=True,
-        ...     url="https://myapp.github.io",
-        ...     message="Deployment successful"
-        ... )
     """
     success: bool
     url: Optional[str] = None
@@ -57,13 +43,6 @@ class DeploymentStatus:
         url: Live URL if deployment is ready
         last_updated: ISO timestamp of last update
         message: Additional status information
-    
-    Example:
-        >>> status = DeploymentStatus(
-        ...     status="ready",
-        ...     url="https://myapp.com",
-        ...     message="Deployment is live"
-        ... )
     """
     status: str  # "building", "ready", "error", "unknown"
     url: Optional[str] = None
@@ -82,12 +61,6 @@ class BasePlatform(ABC):
     Attributes:
         config: Platform-specific configuration dictionary
         platform_name: Name of the platform (auto-derived from class name)
-    
-    Example:
-        >>> class GitHubPlatform(BasePlatform):
-        ...     def validate_credentials(self):
-        ...         # Implementation
-        ...         pass
     """
     
     def __init__(self, config: Dict[str, Any]):
@@ -112,11 +85,6 @@ class BasePlatform(ABC):
             Tuple of (is_valid, message):
                 - is_valid: True if credentials are valid
                 - message: Success message or error description
-        
-        Example:
-            >>> valid, msg = platform.validate_credentials()
-            >>> if not valid:
-            ...     print(f"Auth failed: {msg}")
         """
         pass
     
@@ -138,11 +106,6 @@ class BasePlatform(ABC):
             Tuple of (success, message):
                 - success: True if preparation successful
                 - message: Success message or error description
-        
-        Example:
-            >>> success, msg = platform.prepare_deployment(
-            ...     "./my-app", "npm run build", "build"
-            ... )
         """
         pass
     
@@ -156,11 +119,6 @@ class BasePlatform(ABC):
         
         Returns:
             DeploymentStatus object with current status information
-        
-        Example:
-            >>> status = platform.get_deployment_status()
-            >>> if status.status == "ready":
-            ...     print(f"Site is live at {status.url}")
         """
         pass
     
@@ -178,11 +136,6 @@ class BasePlatform(ABC):
             
         Returns:
             DeploymentResult with success status, URL, and message
-        
-        Example:
-            >>> result = platform.execute_deployment("./my-app", "build")
-            >>> if result.success:
-            ...     print(f"Deployed to {result.url}")
         """
         pass
     
@@ -205,8 +158,5 @@ class BasePlatform(ABC):
         
         Returns:
             Configuration value or default
-        
-        Example:
-            >>> repo = platform.get_config("repo", "unknown/repo")
         """
         return self.config.get(key, default)

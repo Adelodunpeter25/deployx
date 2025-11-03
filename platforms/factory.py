@@ -3,12 +3,6 @@ Platform factory for creating deployment platform instances.
 
 Uses factory pattern to create appropriate platform objects based
 on platform name. Maintains registry of available platforms.
-
-Example:
-    >>> from platforms.factory import get_platform
-    >>> config = {"repo": "user/repo", "branch": "gh-pages"}
-    >>> platform = get_platform("github", config)
-    >>> platform.validate_credentials()
 """
 
 from typing import Dict, Any, Optional
@@ -29,10 +23,6 @@ class PlatformFactory:
     
     Class Attributes:
         _platforms: Dict mapping platform names to platform classes
-    
-    Example:
-        >>> PlatformFactory.register_platform("custom", CustomPlatform)
-        >>> platform = PlatformFactory.create_platform("custom", config)
     """
     
     _platforms = {}
@@ -47,9 +37,6 @@ class PlatformFactory:
         Args:
             name: Platform name (e.g., "github", "vercel")
             platform_class: Platform class (must inherit from BasePlatform)
-        
-        Example:
-            >>> PlatformFactory.register_platform("github", GitHubPlatform)
         """
         cls._platforms[name] = platform_class
     
@@ -67,10 +54,6 @@ class PlatformFactory:
         
         Raises:
             ValueError: If platform name is not registered
-        
-        Example:
-            >>> config = {"repo": "user/repo"}
-            >>> platform = PlatformFactory.create_platform("github", config)
         """
         if platform_name not in cls._platforms:
             raise ValueError(
@@ -88,11 +71,6 @@ class PlatformFactory:
         
         Returns:
             List of registered platform names
-        
-        Example:
-            >>> platforms = PlatformFactory.get_available_platforms()
-            >>> print(platforms)
-            ['github', 'vercel', 'netlify', 'railway', 'render']
         """
         return list(cls._platforms.keys())
 
@@ -112,10 +90,6 @@ def get_platform(platform_name: str, config: Dict[str, Any]) -> BasePlatform:
     
     Raises:
         ValueError: If platform name is not registered
-    
-    Example:
-        >>> from platforms.factory import get_platform
-        >>> platform = get_platform("github", {"repo": "user/repo"})
     """
     return PlatformFactory.create_platform(platform_name, config)
 

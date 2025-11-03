@@ -11,12 +11,6 @@ Features:
     - Configurable verbosity levels
     - Structured log formatting
     - Singleton logger pattern to avoid duplicate handlers
-
-Example:
-    >>> from core.logging import setup_logging, get_logger
-    >>> setup_logging(verbose=True, log_file="deployx.log")
-    >>> logger = get_logger(__name__)
-    >>> logger.info("Deployment started")
 """
 import logging
 import sys
@@ -36,10 +30,6 @@ def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> logg
         
     Returns:
         Configured logger instance for the application
-        
-    Example:
-        >>> logger = setup_logging(verbose=True, log_file="app.log")
-        >>> logger.info("Application started")
     """
     logger = logging.getLogger('deployx')
     
@@ -83,9 +73,5 @@ def get_logger(name: str = 'deployx') -> logging.Logger:
         
     Returns:
         Logger instance configured for the specified module
-        
-    Example:
-        >>> logger = get_logger(__name__)
-        >>> logger.debug("Debug message from current module")
     """
     return logging.getLogger(name)

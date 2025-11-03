@@ -10,11 +10,6 @@ The models provide:
     - Automatic validation with clear error messages
     - JSON/YAML serialization support
     - Default values and field descriptions
-
-Example:
-    >>> config_data = {"project": {"name": "my-app", "type": "react"}, ...}
-    >>> config = DeployXConfig(**config_data)
-    >>> platform_config = config.get_platform_config()
 """
 from typing import Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field, validator
@@ -133,14 +128,6 @@ class DeployXConfig(BaseModel):
         netlify: Netlify configuration (optional)
         railway: Railway configuration (optional)
         render: Render configuration (optional)
-    
-    Example:
-        >>> config = DeployXConfig(
-        ...     project={"name": "my-app", "type": "react"},
-        ...     build={"command": "npm run build", "output": "build"},
-        ...     platform="github",
-        ...     github={"repo": "user/repo", "branch": "gh-pages"}
-        ... )
     """
     project: ProjectConfig
     build: BuildConfig
@@ -184,11 +171,6 @@ class DeployXConfig(BaseModel):
         
         Returns:
             Dictionary containing platform-specific configuration
-            
-        Example:
-            >>> config = DeployXConfig(...)
-            >>> github_config = config.get_platform_config()
-            >>> print(github_config["repo"])
         """
         platform_config = getattr(self, self.platform)
         return platform_config.dict() if platform_config else {}

@@ -13,10 +13,6 @@ Services:
 
 All services use async patterns for better performance and
 non-blocking operations where appropriate.
-
-Example:
-    >>> service = DeploymentService("./my-project")
-    >>> success, message = await service.deploy(dry_run=True)
 """
 import asyncio
 from pathlib import Path
@@ -41,10 +37,6 @@ class DeploymentService:
         project_path: Path to the project directory
         config: Configuration manager instance
         logger: Logger instance for this service
-    
-    Example:
-        >>> service = DeploymentService("./my-app")
-        >>> success, message = await service.deploy(force=True)
     """
     
     def __init__(self, project_path: str = "."):
@@ -71,11 +63,6 @@ class DeploymentService:
                 - success: True if validation passed
                 - config: Validated configuration object (None if failed)
                 - error: Error message (None if successful)
-        
-        Example:
-            >>> valid, config, error = await service.validate_config()
-            >>> if not valid:
-            ...     print(f"Config error: {error}")
         """
         try:
             if not self.config.exists():
@@ -107,10 +94,6 @@ class DeploymentService:
             Tuple containing:
                 - success: True if deployment succeeded
                 - message: Success message or error description
-        
-        Example:
-            >>> success, msg = await service.deploy(dry_run=True)
-            >>> print(f"Deployment result: {msg}")
         """
         self.logger.info(f"Starting deployment (force={force}, dry_run={dry_run})")
         
@@ -203,10 +186,6 @@ class InitService:
         project_path: Path to the project directory
         config: Configuration manager instance
         logger: Logger instance for this service
-    
-    Example:
-        >>> service = InitService("./new-project")
-        >>> success, message = await service.initialize_project()
     """
     
     def __init__(self, project_path: str = "."):
@@ -232,11 +211,6 @@ class InitService:
             Tuple containing:
                 - success: True if initialization succeeded
                 - message: Success message or error description
-        
-        Example:
-            >>> success, msg = await service.initialize_project()
-            >>> if success:
-            ...     print("Project initialized successfully")
         """
         self.logger.info("Starting project initialization")
         
@@ -288,10 +262,6 @@ class StatusService:
         project_path: Path to the project directory
         config: Configuration manager instance
         logger: Logger instance for this service
-    
-    Example:
-        >>> service = StatusService("./my-project")
-        >>> success, status_info = await service.get_status()
     """
     
     def __init__(self, project_path: str = "."):
@@ -316,10 +286,6 @@ class StatusService:
             Tuple containing:
                 - success: True if status check succeeded
                 - message: Status information or error description
-        
-        Example:
-            >>> success, status = await service.get_status()
-            >>> print(f"Status: {status}")
         """
         self.logger.info("Checking deployment status")
         
