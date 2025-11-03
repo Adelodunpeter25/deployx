@@ -80,9 +80,37 @@ class GitHubPlatform(BasePlatform):
         except GithubException as e:
             error = handle_github_api_error(e)
             return False, error.message
+    def get_deployment_status(self) -> DeploymentStatus:
+        """Get current GitHub Pages deployment status"""
+        try:
+            if not self.repo_obj:
+                # Try to initialize if not done yet
+                valid, _ = self.validate_credentials()
+                if not valid:
+                    return DeploymentStatus(
+                        status="error",
+                        message="Failed to authenticate with GitHub"
+                    )
+            
+            # Check if GitHub Pages is enabled
+            try:
+                pages = self.repo_obj.get_pages()
+                return DeploymentStatus(
+                    status="ready",
+                    url=pages.html_url,
+                    message="GitHub Pages is active"
+                )
+            except Exception:
+                return DeploymentStatus(
+                    status="unknown",
+                    message="GitHub Pages status unknown"
+                )
+                
         except Exception as e:
-            error = handle_auth_error("github", str(e))
-            return False, error.message
+            return DeploymentStatus(
+                status="error",
+                message=f"Failed to get status: {str(e)}"
+            )
     
     def prepare_deployment(self, project_path: str, build_command: Optional[str], output_dir: str) -> Tuple[bool, str]:
         """Prepare deployment by building project and checking files"""

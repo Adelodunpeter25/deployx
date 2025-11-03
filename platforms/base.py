@@ -147,6 +147,24 @@ class BasePlatform(ABC):
         pass
     
     @abstractmethod
+    def get_deployment_status(self) -> DeploymentStatus:
+        """
+        Get current deployment status.
+        
+        Should check the current status of the deployment on the platform
+        and return structured status information.
+        
+        Returns:
+            DeploymentStatus object with current status information
+        
+        Example:
+            >>> status = platform.get_deployment_status()
+            >>> if status.status == "ready":
+            ...     print(f"Site is live at {status.url}")
+        """
+        pass
+    
+    @abstractmethod
     def execute_deployment(self, project_path: str, output_dir: str) -> DeploymentResult:
         """
         Execute the actual deployment.
@@ -165,44 +183,6 @@ class BasePlatform(ABC):
             >>> result = platform.execute_deployment("./my-app", "build")
             >>> if result.success:
             ...     print(f"Deployed to {result.url}")
-        """
-        pass
-    
-    @abstractmethod
-    def get_status(self, deployment_id: Optional[str] = None) -> DeploymentStatus:
-        """
-        Get current deployment status.
-        
-        Should query platform API to get current status of deployment.
-        Can check specific deployment by ID or latest deployment.
-        
-        Args:
-            deployment_id: Optional deployment ID to check specific deployment
-            
-        Returns:
-            DeploymentStatus with current status information
-        
-        Example:
-            >>> status = platform.get_status()
-            >>> print(f"Status: {status.status}")
-        """
-        pass
-    
-    @abstractmethod
-    def get_url(self) -> Optional[str]:
-        """
-        Get the live site URL.
-        
-        Should return the URL where the deployed site is accessible.
-        Returns None if URL cannot be determined.
-        
-        Returns:
-            Live site URL or None if not available
-        
-        Example:
-            >>> url = platform.get_url()
-            >>> if url:
-            ...     print(f"Visit: {url}")
         """
         pass
     

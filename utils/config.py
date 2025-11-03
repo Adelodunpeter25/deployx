@@ -14,9 +14,11 @@ Example:
 
 import yaml
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from core.logging import get_logger
 
 CONFIG_FILE = "deployx.yml"
+logger = get_logger(__name__)
 
 
 class Config:
@@ -47,6 +49,7 @@ class Config:
         self.project_path = Path(project_path)
         self.config_path = self.project_path / CONFIG_FILE
         self._data = {}
+        self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
     
     def load(self) -> Dict[str, Any]:
         """
@@ -62,11 +65,17 @@ class Config:
             yaml.YAMLError: If configuration file is malformed
         """
         if not self.config_path.exists():
+            self.logger.debug("Configuration file does not exist")
             return {}
         
-        with open(self.config_path, 'r') as f:
-            self._data = yaml.safe_load(f) or {}
-        return self._data
+        try:
+            with open(self.config_path, 'r') as f:
+                self._data = yaml.safe_load(f) or {}
+            self.logger.debug(f"Loaded configuration with {len(self._data)} keys")
+            return self._data
+        except yaml.YAMLError as e:
+            self.logger.error(f"Failed to parse configuration file: {e}")
+            raise
     
     def save(self, data: Dict[str, Any]) -> None:
         """
@@ -81,9 +90,14 @@ class Config:
         Raises:
             IOError: If file cannot be written
         """
-        self._data = data
-        with open(self.config_path, 'w') as f:
-            yaml.dump(data, f, default_flow_style=False, indent=2)
+        try:
+            self._data = data
+            with open(self.config_path, 'w') as f:
+                yaml.dump(data, f, default_flow_style=False, indent=2)
+            self.logger.info(f"Configuration saved to {self.config_path}")
+        except IOError as e:
+            self.logger.error(f"Failed to save configuration: {e}")
+            raise
     
     def exists(self) -> bool:
         """

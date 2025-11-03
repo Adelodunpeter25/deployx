@@ -5,11 +5,27 @@ Stop memorizing platform-specific commands
 """
 
 import sys
+import asyncio
 import click
+import traceback
+import subprocess
 from pathlib import Path
 
 # Add current directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
+
+from core.logging import setup_logging, get_logger
+from core.services import DeploymentService, InitService, StatusService
+from commands.logs import logs_command
+from commands.config import config_show_command, config_edit_command, config_validate_command
+from commands.history import history_command
+from commands.rollback import rollback_command
+from utils.ui import header, error, info
+from utils.errors import DeployXError, display_error_with_suggestions
+from platforms.factory import PlatformFactory
+
+# Version information
+__version__ = "0.6.0"
 
 def check_environment():
     """Check for conflicting packages that cause import errors"""
@@ -19,7 +35,6 @@ def check_environment():
         if hasattr(asyncio, '__file__') and 'site-packages' in str(asyncio.__file__):
             print("⚠️  Warning: Conflicting 'asyncio' package detected", file=sys.stderr)
             print("   Attempting to auto-fix...", file=sys.stderr)
-            import subprocess
             try:
                 subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "asyncio"], 
                              capture_output=True, check=True)
@@ -31,7 +46,6 @@ def check_environment():
     except SyntaxError:
         print("❌ Error: Corrupted asyncio module detected", file=sys.stderr)
         print("   Attempting to fix...", file=sys.stderr)
-        import subprocess
         try:
             subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "asyncio"], 
                          capture_output=True, check=True)
@@ -44,36 +58,17 @@ def check_environment():
 
 check_environment()
 
-from commands.init import init_command
-from commands.deploy import deploy_command, redeploy_command
-from commands.status import status_command, quick_status_command
-from commands.interactive import interactive_command
-from commands.logs import logs_command
-from commands.config import config_show_command, config_edit_command, config_validate_command
-from commands.history import history_command
-from commands.rollback import rollback_command
-from utils.ui import header, error, info
-from utils.errors import DeployXError, display_error_with_suggestions
-
-# Version information
-__version__ = "0.6.0"
-
 @click.group()
 @click.version_option(version=__version__, prog_name="DeployX")
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose output for debugging')
+@click.option('--log-file', help='Log file path')
 @click.pass_context
-def cli(ctx, verbose):
+def cli(ctx, verbose, log_file):
     """
     🚀 DeployX - One CLI for all your deployments
     
     Stop memorizing platform-specific commands. Deploy to GitHub Pages, 
     Vercel, Netlify, Railway, and Render with zero configuration.
-    
-    Examples:
-      deployx init                 # Set up deployment configuration
-      deployx deploy               # Deploy your project
-      deployx status               # Check deployment status
-      deployx deploy --force       # Force redeploy without confirmation
     
     Get started:
       1. Run 'deployx init' in your project directory
@@ -85,10 +80,14 @@ def cli(ctx, verbose):
     # Ensure context object exists
     ctx.ensure_object(dict)
     ctx.obj['verbose'] = verbose
+    ctx.obj['log_file'] = log_file
     
-    # Set up global error handling
+    # Setup logging
+    logger = setup_logging(verbose=verbose, log_file=log_file)
+    
     if verbose:
         info(f"DeployX v{__version__} - Verbose mode enabled")
+        logger.info(f"DeployX v{__version__} started with verbose logging")
 
 @cli.command()
 @click.option('--path', '-p', default='.', help='Project path (default: current directory)')
@@ -109,27 +108,36 @@ def init(ctx, path):
     │ deployx init --path ./app    # Initialize in specific directory  │
     └──────────────────────────────────────────────────────────────────┘
     """
+    logger = get_logger(__name__)
+    
+    async def run_init():
+        try:
+            service = InitService(path)
+            success, message = await service.initialize_project()
+            
+            if success:
+                info(f"✅ {message}")
+                return True
+            else:
+                error(f"❌ {message}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Initialization failed: {e}")
+            if ctx.obj.get('verbose'):
+                error(f"❌ Initialization failed: {str(e)}")
+                error("Full traceback:")
+                traceback.print_exc()
+            else:
+                error(f"❌ Initialization failed: {str(e)}")
+                error("Use --verbose for detailed error information")
+            return False
+    
     try:
-        success_result = init_command(path)
-        if success_result:
-            sys.exit(0)
-        else:
-            sys.exit(1)
+        success = asyncio.run(run_init())
+        sys.exit(0 if success else 1)
     except KeyboardInterrupt:
         error("\n❌ Setup cancelled by user")
-        sys.exit(1)
-    except DeployXError as e:
-        display_error_with_suggestions(e)
-        sys.exit(1)
-    except Exception as e:
-        if ctx.obj.get('verbose'):
-            import traceback
-            error(f"❌ Initialization failed: {str(e)}")
-            error("Full traceback:")
-            traceback.print_exc()
-        else:
-            error(f"❌ Initialization failed: {str(e)}")
-            error("Use --verbose for detailed error information")
         sys.exit(1)
 
 @cli.command()
@@ -156,33 +164,36 @@ def deploy(ctx, path, force, dry_run):
     
     💡 Note: Run 'deployx init' first if no configuration exists.
     """
-    try:
-        if dry_run:
-            success_result = deploy_command(path, dry_run=True)
-        elif force:
-            success_result = redeploy_command(path)
-        else:
-            success_result = deploy_command(path)
+    logger = get_logger(__name__)
+    
+    async def run_deploy():
+        try:
+            service = DeploymentService(path)
+            success, message = await service.deploy(force=force, dry_run=dry_run)
             
-        if success_result:
-            sys.exit(0)
-        else:
-            sys.exit(1)
+            if success:
+                info(f"✅ {message}")
+                return True
+            else:
+                error(f"❌ {message}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Deployment failed: {e}")
+            if ctx.obj.get('verbose'):
+                error(f"❌ Deployment failed: {str(e)}")
+                error("Full traceback:")
+                traceback.print_exc()
+            else:
+                error(f"❌ Deployment failed: {str(e)}")
+                error("Use --verbose for detailed error information")
+            return False
+    
+    try:
+        success = asyncio.run(run_deploy())
+        sys.exit(0 if success else 1)
     except KeyboardInterrupt:
         error("\n❌ Deployment cancelled by user")
-        sys.exit(1)
-    except DeployXError as e:
-        display_error_with_suggestions(e)
-        sys.exit(1)
-    except Exception as e:
-        if ctx.obj.get('verbose'):
-            import traceback
-            error(f"❌ Deployment failed: {str(e)}")
-            error("Full traceback:")
-            traceback.print_exc()
-        else:
-            error(f"❌ Deployment failed: {str(e)}")
-            error("Use --verbose for detailed error information")
         sys.exit(1)
 
 @cli.command()
@@ -213,36 +224,41 @@ def status(ctx, path, quick, verbose):
     │ 2: Configuration not found                                       │
     └──────────────────────────────────────────────────────────────────┘
     """
+    logger = get_logger(__name__)
+    
+    async def run_status():
+        try:
+            service = StatusService(path)
+            success, message = await service.get_status()
+            
+            if success:
+                if not quick:
+                    info(f"📊 {message}")
+                return True
+            else:
+                if not quick:
+                    error(f"❌ {message}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Status check failed: {e}")
+            if ctx.obj.get('verbose'):
+                error(f"❌ Status check failed: {str(e)}")
+                error("Full traceback:")
+                traceback.print_exc()
+            else:
+                error(f"❌ Status check failed: {str(e)}")
+                error("Use --verbose for detailed error information")
+            return False
+    
     try:
+        success = asyncio.run(run_status())
         if quick:
-            status_result = quick_status_command(path)
-            if status_result == 'ready':
-                sys.exit(0)
-            elif status_result is None:
-                sys.exit(2)  # No config
-            else:
-                sys.exit(1)  # Issues
+            sys.exit(0 if success else 1)
         else:
-            success_result = status_command(path)
-            if success_result:
-                sys.exit(0)
-            else:
-                sys.exit(1)
+            sys.exit(0 if success else 1)
     except KeyboardInterrupt:
         error("\n❌ Status check cancelled by user")
-        sys.exit(1)
-    except DeployXError as e:
-        display_error_with_suggestions(e)
-        sys.exit(1)
-    except Exception as e:
-        if ctx.obj.get('verbose'):
-            import traceback
-            error(f"❌ Status check failed: {str(e)}")
-            error("Full traceback:")
-            traceback.print_exc()
-        else:
-            error(f"❌ Status check failed: {str(e)}")
-            error("Use --verbose for detailed error information")
         sys.exit(1)
 
 @cli.command()
@@ -279,7 +295,6 @@ def interactive(ctx, path):
         sys.exit(1)
     except Exception as e:
         if ctx.obj.get('verbose'):
-            import traceback
             error(f"❌ Interactive mode failed: {str(e)}")
             error("Full traceback:")
             traceback.print_exc()
@@ -313,7 +328,6 @@ def logs(ctx, path, follow, tail):
         sys.exit(0)
     except Exception as e:
         if ctx.obj.get('verbose'):
-            import traceback
             error(f"❌ Logs command failed: {str(e)}")
             traceback.print_exc()
         else:
@@ -386,7 +400,6 @@ def history(ctx, path, limit):
         sys.exit(0 if success_result else 1)
     except Exception as e:
         if ctx.obj.get('verbose'):
-            import traceback
             error(f"❌ History command failed: {str(e)}")
             traceback.print_exc()
         else:
@@ -426,7 +439,6 @@ def rollback(ctx, path, target):
         sys.exit(1)
     except Exception as e:
         if ctx.obj.get('verbose'):
-            import traceback
             error(f"❌ Rollback failed: {str(e)}")
             traceback.print_exc()
         else:
@@ -454,7 +466,6 @@ def version(ctx):
     
     # Show available platforms
     try:
-        from platforms.factory import PlatformFactory
         platforms = PlatformFactory.get_available_platforms()
         print(f"Available Platforms: {', '.join(platforms)}")
     except Exception:
@@ -471,7 +482,7 @@ def main():
         sys.exit(1)
     except Exception as e:
         error(f"❌ Unexpected error: {str(e)}")
-        error("Please report this issue at: https://github.com/deployx/deployx/issues")
+        error("Please report this issue at: https://github.com/Adelodunpeter25/deployx/issues")
         sys.exit(1)
 
 if __name__ == '__main__':

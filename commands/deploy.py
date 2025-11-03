@@ -1,3 +1,31 @@
+"""
+Deployment command implementation for DeployX.
+
+This module contains the core deployment logic that handles the complete
+deployment workflow from configuration validation to platform-specific
+deployment execution. It provides both interactive and automated deployment
+modes with comprehensive error handling and user feedback.
+
+Features:
+    - Configuration validation and loading
+    - Platform-specific deployment execution
+    - Dry-run mode for deployment preview
+    - Interactive deployment confirmation
+    - Build process management
+    - Error recovery and retry logic
+    - Real-time progress feedback
+
+Functions:
+    - deploy_command: Main deployment function
+    - redeploy_command: Force deployment without confirmation
+    - _show_deployment_summary: Display deployment preview
+    - _show_dry_run_summary: Show dry-run results
+    - _open_deployment_url: Open deployed site in browser
+
+Example:
+    >>> from commands.deploy import deploy_command
+    >>> success = deploy_command("./my-project", dry_run=True)
+"""
 import time
 import webbrowser
 from typing import Optional
@@ -9,7 +37,25 @@ from utils.validator import validate_config
 from platforms.factory import get_platform
 
 def deploy_command(project_path: str = ".", dry_run: bool = False) -> bool:
-    """Execute deployment to configured platform"""
+    """
+    Execute deployment to configured platform.
+    
+    Performs the complete deployment workflow including configuration
+    validation, platform setup, build execution, and deployment.
+    Supports dry-run mode for preview without actual deployment.
+    
+    Args:
+        project_path: Path to project directory (default: current directory)
+        dry_run: If True, show deployment preview without executing
+        
+    Returns:
+        True if deployment succeeded, False otherwise
+        
+    Example:
+        >>> success = deploy_command("./my-app", dry_run=True)
+        >>> if success:
+        ...     print("Deployment completed successfully")
+    """
     
     header("Deploy Project")
     
