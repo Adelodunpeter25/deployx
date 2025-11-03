@@ -60,8 +60,9 @@ class RenderPlatform(BasePlatform):
             # Run build if configured
             if build_command:
                 result = subprocess.run(
-                    build_command.split(),
+                    build_command,
                     cwd=project_path,
+                    shell=True,
                     capture_output=True,
                     text=True
                 )

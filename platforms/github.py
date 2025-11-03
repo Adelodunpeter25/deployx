@@ -158,12 +158,12 @@ class GitHubPlatform(BasePlatform):
         # Run build command if provided
         if build_command:
             try:
-                cmd_parts = build_command.split()
                 result = subprocess.run(
-                    cmd_parts,
+                    build_command,
                     cwd=project_path,
                     capture_output=True,
                     text=True,
+                    shell=True,
                     check=True,
                     timeout=300  # 5 minute timeout
                 )

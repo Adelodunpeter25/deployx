@@ -58,8 +58,9 @@ class NetlifyPlatform(BasePlatform):
             # Run build if configured
             if build_command:
                 result = subprocess.run(
-                    build_command.split(),
+                    build_command,
                     cwd=self.project_path,
+                    shell=True,
                     capture_output=True,
                     text=True
                 )
