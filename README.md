@@ -5,9 +5,9 @@ One CLI for all your deployments
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-DeployX eliminates the complexity of platform-specific deployment commands. Whether you're deploying a React app to Vercel, a static site to GitHub Pages, or a full-stack application to Railway, DeployX provides a unified interface that auto-detects your project type, configures build settings, and handles authentication—all through a single, intuitive command.
+DeployX eliminates the complexity of platform-specific deployment commands. One CLI for all your deployments - just run `deployx deploy` and watch your project go live.
 
-No more memorizing different CLI tools, configuration formats, or deployment workflows. Just run `deployx deploy` and watch your project go live.
+No more memorizing different CLI tools, configuration formats, or deployment workflows.
 
 ## ✨ Features
 
@@ -15,6 +15,8 @@ No more memorizing different CLI tools, configuration formats, or deployment wor
 - 🌐 **Multiple Platforms** - GitHub Pages, Vercel, Netlify, Railway, Render support
 - 🔧 **Framework Support** - React, Vue, Next.js, Angular, Django, Flask, FastAPI
 - 📦 **Package Manager Detection** - npm, yarn, pnpm, bun, pip, poetry, pipenv, uv
+- 🌍 **Environment Variables** - Auto-detect .env files and configure across platforms
+- ⚡ **Auto-Service Creation** - Automatically creates services on Render and other platforms
 - 🎨 **Beautiful CLI** - Rich terminal output with progress bars and spinners
 - 🔄 **CI/CD Ready** - Perfect for automated deployments
 - 📋 **Deployment Logs** - View and stream deployment logs in real-time
@@ -28,104 +30,108 @@ No more memorizing different CLI tools, configuration formats, or deployment wor
 ### Installation
 
 ```bash
-# Quick install with curl (recommended)
-curl -fsSL https://raw.githubusercontent.com/Adelodunpeter25/deployx/main/install.sh | bash
-
-# Or install with pip
+# Install with pip
 pip install deployx
 
-# Or with uv
+# Or with uv (recommended)
 uv add deployx
 ```
 
-**Uninstall:**
-```bash
-# Using uninstall script
-curl -fsSL https://raw.githubusercontent.com/Adelodunpeter25/deployx/main/uninstall.sh | bash
+### First Deployment (Beginner-Friendly)
 
-# Or with pip
-pip uninstall deployx
-```
-
-### First Deployment
-
-#### Option 1: Interactive Mode (Recommended for beginners)
-
-1. **Navigate to your project directory**
+1. **Navigate to your project**
    ```bash
-   cd my-awesome-project
+   cd my-project
    ```
 
-2. **Run interactive setup and deployment**
-   ```bash
-   deployx interactive
-   ```
-
-#### Option 2: Step-by-step
-
-1. **Navigate to your project directory**
-   ```bash
-   cd my-awesome-project
-   ```
-
-2. **Initialize deployment configuration**
-   ```bash
-   deployx init
-   ```
-
-3. **Deploy your project**
+2. **Deploy in one command**
    ```bash
    deployx deploy
    ```
 
-4. **Check deployment status**
-   ```bash
-   deployx status
-   ```
+That's it! DeployX will:
+- Auto-detect your project type and framework
+- Configure build settings automatically  
+- Set up the deployment platform
+- Handle environment variables from .env files
+- Deploy your project and provide a live URL
 
-That's it! Your project is now live. 🎉
+🎉 **Your project is now live!**
 
-### Additional Commands
+### Advanced Usage
+
+**Interactive setup for full control:**
+```bash
+deployx interactive
+```
+
+**Step-by-step configuration:**
+```bash
+deployx init      # Initialize configuration
+deployx deploy    # Deploy your project
+deployx status    # Check deployment status
+```
+
+**Environment variable management:**
+```bash
+deployx deploy    # Auto-detects .env files and prompts for configuration
+```
 
 **Preview before deploying:**
 ```bash
-deployx deploy --dry-run        # See what would happen before actually deploying
+deployx deploy --dry-run
 ```
 
-**Manage configuration:**
+## 🌍 Environment Variables
+
+DeployX automatically detects `.env` files and helps configure environment variables across platforms:
+
+- **Auto-Detection**: Finds `.env`, `.env.local`, `.env.production` files
+- **Multiple Input Methods**: Auto-configure, paste manually, or add interactively
+- **Platform Integration**: Sets variables as GitHub secrets, Render service vars, etc.
+- **User Control**: Choose which variables to configure and preview before setting
+
 ```bash
-deployx config show             # View current config
-deployx config validate         # Check config is valid
+# During deployment, DeployX will prompt:
+🔍 Found .env file with 5 variables
+📋 Variables: NODE_ENV, API_URL, DATABASE_URL, JWT_SECRET, etc.
+❓ Configure environment variables for GitHub? (y/n)
 ```
+
+## ⚡ Auto-Service Creation
+
+For platforms like Render, DeployX automatically creates services when needed:
+
+- **Smart Detection**: Determines if you need a static site or web service
+- **Auto-Configuration**: Sets up build commands and publish paths
+- **Service Management**: Creates and configures services via platform APIs
+- **Zero Manual Setup**: No need to create services manually in dashboards
 
 ## 📚 Commands
 
 ```bash
-# Setup and deploy in one go
-deployx interactive
-
-# Initialize configuration
-deployx init
-
-# Deploy your project
-deployx deploy
+# Quick deployment
+deployx deploy                  # Auto-detect and deploy
 deployx deploy --dry-run        # Preview without deploying
 deployx deploy --force          # Skip confirmations
 
-# Check status and logs
-deployx status
-deployx logs --follow
+# Setup and configuration
+deployx init                    # Initialize configuration
+deployx interactive             # Guided setup and deployment
 
-# Manage configuration
-deployx config show
-deployx config edit
+# Monitoring and management
+deployx status                  # Check deployment status
+deployx logs --follow           # Stream deployment logs
+deployx history --limit 10      # View deployment history
 
-# View deployment history
-deployx history --limit 10
+# Configuration management
+deployx config show             # View current config
+deployx config edit             # Edit configuration
+deployx config validate         # Validate configuration
 
-# Rollback to previous deployment
-deployx rollback                # Interactive selection
-deployx rollback --target 2     # Rollback to 2nd previous deployment
+# Rollback and recovery
+deployx rollback                # Interactive rollback selection
+deployx rollback --target 2     # Rollback to specific deployment
 ```
 
 Use `deployx [command] --help` for detailed options.
@@ -149,9 +155,10 @@ github:
   repo: "username/repository"
   method: "branch"
   branch: "gh-pages"
-```
 
-Other platforms (Vercel, Netlify, Railway, Render) use similar configurations.
+# Environment variables are managed automatically
+# but can be configured per platform if needed
+```
 
 ## 🔧 Platform Setup
 
