@@ -19,7 +19,7 @@ from utils.ui import header, success, error, info, warning, smart_error_recovery
 from utils.config import Config
 from commands.init import init_command
 from commands.deploy import deploy_command
-from constants import MAX_DEPLOYMENT_ATTEMPTS
+from core.constants import MAX_DEPLOYMENT_ATTEMPTS
 
 
 def interactive_command(project_path: str = ".") -> bool:

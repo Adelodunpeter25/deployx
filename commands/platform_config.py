@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional
 import questionary
 
 from utils.ui import success, error, info
-from constants import TOKEN_FILE_PERMISSIONS
+from core.constants import TOKEN_FILE_PERMISSIONS
 
 
 def configure_github(project_path: str, summary: Dict[str, Any], 

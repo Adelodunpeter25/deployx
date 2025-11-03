@@ -12,13 +12,8 @@ import questionary
 from git import Repo, InvalidGitRepositoryError
 
 from utils.ui import success, error, info
-from constants import (
+from core.constants import (
     TOKEN_FILE_PERMISSIONS,
-    GITHUB_TOKEN_URL,
-    VERCEL_TOKEN_URL,
-    NETLIFY_TOKEN_URL,
-    RAILWAY_TOKEN_URL,
-    RENDER_TOKEN_URL
 )
 
 

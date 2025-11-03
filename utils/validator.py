@@ -14,7 +14,7 @@ Example:
 from typing import Dict, Any, List
 
 try:
-    from constants import SUPPORTED_PLATFORMS, SUPPORTED_PROJECT_TYPES
+    from core.constants import SUPPORTED_PLATFORMS, SUPPORTED_PROJECT_TYPES
 except ImportError:
     # Fallback if constants not available
     SUPPORTED_PLATFORMS = ["github", "vercel", "netlify", "railway", "render"]
