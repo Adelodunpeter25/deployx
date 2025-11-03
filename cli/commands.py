@@ -195,7 +195,7 @@ def rollback(ctx, path, target):
 @click.pass_context
 def version_cmd(ctx):
     """Show version information and system details."""
-    __version__ = "0.6.0"  # Define version locally
+    __version__ = "0.7.0"  # Define version locally
     
     header(f"DeployX v{__version__}")
     print(f"Python: {sys.version.split()[0]}")

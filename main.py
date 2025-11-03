@@ -15,7 +15,7 @@ from cli.factory import create_cli
 from utils.ui import error
 
 # Version information
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 def main():
     """Main entry point with global exception handling."""
