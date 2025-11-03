@@ -1,5 +1,5 @@
 """
-Render deployment platform implementation
+Render deployment platform implementation with auto-configuration.
 """
 
 import os
@@ -7,21 +7,27 @@ import requests
 import subprocess
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
-from .base import BasePlatform, DeploymentResult, DeploymentStatus
+from ..base import BasePlatform, DeploymentResult, DeploymentStatus
+from .api import RenderAPIClient
+from .detector import RenderServiceDetector
 from utils.errors import AuthenticationError
+from utils.config import Config
+from core.logging import get_logger
 
 class RenderPlatform(BasePlatform):
-    """Render deployment platform"""
+    """Render deployment platform with auto-service creation."""
     
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.api_base = "https://api.render.com/v1"
         self.project_path = config.get('project_path', '.')
         self.token = self._get_token()
-        self.service_id = config.get("render", {}).get("service_id")
+        self.service_id = config.get("service_id")
+        self.api_client = RenderAPIClient(self.token) if self.token else None
+        self.logger = get_logger(__name__)
         
     def _get_token(self) -> str:
-        """Get Render token from file or environment"""
+        """Get Render token from file or environment."""
         token_file = Path('.deployx_render_token')
         
         if token_file.exists():
@@ -37,25 +43,113 @@ class RenderPlatform(BasePlatform):
         return token
     
     def validate_credentials(self) -> Tuple[bool, str]:
-        """Validate Render credentials"""
+        """Validate Render credentials and auto-configure service if needed."""
         try:
             headers = {"Authorization": f"Bearer {self.token}"}
             response = requests.get(f"{self.api_base}/owners", headers=headers)
             
             if response.status_code == 200:
                 owners = response.json()
-                if owners:
-                    return True, f"Authenticated as {owners[0].get('name', 'user')}"
-                else:
-                    return True, "Authenticated successfully"
+                username = owners[0].get('name', 'user') if owners else 'user'
+                
+                # Auto-configure service if service_id is missing
+                if not self.service_id:
+                    self.logger.info("No service ID found, attempting auto-configuration")
+                    success, message = self._auto_configure_service()
+                    if not success:
+                        return False, f"Auto-configuration failed: {message}"
+                
+                return True, f"Authenticated as {username}"
             else:
-                return False, f"Invalid token (HTTP {response.status_code})"
+                return False, f"Authentication failed: {response.status_code}"
+                
+        except requests.exceptions.RequestException as e:
+            return False, f"Network error: {str(e)}"
+        except Exception as e:
+            return False, f"Validation error: {str(e)}"
+    
+    def _auto_configure_service(self) -> Tuple[bool, str]:
+        """Auto-configure Render service for the project."""
+        try:
+            # Get project information
+            config = Config(self.project_path)
+            config_data = config.load()
+            
+            project_name = config_data.get("project", {}).get("name", Path(self.project_path).name)
+            project_type = config_data.get("project", {}).get("type", "static")
+            
+            # Detect service type and configuration
+            service_type, build_command, publish_path = RenderServiceDetector.detect_service_type(
+                self.project_path, project_type
+            )
+            
+            # Get existing services to avoid name conflicts
+            success, existing_services, error = self.api_client.list_services()
+            if not success:
+                return False, f"Failed to list existing services: {error}"
+            
+            # Generate unique service name
+            service_name = RenderServiceDetector.generate_service_name(project_name, existing_services)
+            
+            # Get repository URL
+            repo_url = self._get_git_repo_url() or f"https://github.com/user/{project_name}"
+            
+            # Create the service
+            self.logger.info(f"Creating {service_type} service: {service_name}")
+            success, service, error = self.api_client.create_service(
+                name=service_name,
+                service_type=service_type,
+                repo_url=repo_url,
+                build_command=build_command,
+                publish_path=publish_path
+            )
+            
+            if success:
+                # Update configuration with new service ID
+                self.service_id = service.id
+                self._update_config_with_service_id(service.id)
+                
+                self.logger.info(f"Service created successfully: {service.id}")
+                return True, f"Service '{service_name}' created with ID: {service.id}"
+            else:
+                return False, error
                 
         except Exception as e:
-            return False, f"Connection failed: {str(e)}"
+            self.logger.error(f"Auto-configuration failed: {e}")
+            return False, str(e)
+    
+    def _update_config_with_service_id(self, service_id: str):
+        """Update configuration file with new service ID."""
+        try:
+            config = Config(self.project_path)
+            config_data = config.load()
+            
+            # Ensure render section exists
+            if "render" not in config_data:
+                config_data["render"] = {}
+            
+            # Update service ID
+            config_data["render"]["service_id"] = service_id
+            
+            # Save updated configuration
+            config.save(config_data)
+            self.logger.info(f"Configuration updated with service ID: {service_id}")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to update configuration: {e}")
+    
+    def _get_git_repo_url(self) -> Optional[str]:
+        """Get Git repository URL from project."""
+        try:
+            import git
+            repo = git.Repo(self.project_path)
+            origin = repo.remote('origin')
+            return origin.url
+        except Exception:
+            return None
     
     def prepare_deployment(self, project_path: str, build_command: Optional[str], output_dir: str) -> Tuple[bool, str]:
-        """Prepare deployment files"""
+        """Prepare deployment files."""
         try:
             # Run build if configured
             if build_command:
@@ -75,10 +169,8 @@ class RenderPlatform(BasePlatform):
             return False, f"Preparation failed: {str(e)}"
     
     def execute_deployment(self, project_path: str, output_dir: str) -> DeploymentResult:
-        """Execute deployment to Render"""
+        """Execute deployment to Render."""
         try:
-            # Render deployments are typically triggered via git push
-            # or manual deploy via API
             headers = {
                 "Authorization": f"Bearer {self.token}",
                 "Content-Type": "application/json"
@@ -112,8 +204,8 @@ class RenderPlatform(BasePlatform):
         except Exception as e:
             return DeploymentResult(success=False, message=f"Deployment failed: {str(e)}")
     
-    def get_status(self, deployment_id: Optional[str] = None) -> DeploymentStatus:
-        """Get deployment status"""
+    def get_deployment_status(self) -> DeploymentStatus:
+        """Get deployment status."""
         try:
             if not self.service_id:
                 return DeploymentStatus(status="unknown", message="No service ID configured")
@@ -162,8 +254,3 @@ class RenderPlatform(BasePlatform):
             
         except Exception as e:
             return DeploymentStatus(status="error", message=f"Status check failed: {str(e)}")
-    
-    def get_url(self) -> Optional[str]:
-        """Get deployment URL"""
-        status = self.get_status()
-        return status.url
