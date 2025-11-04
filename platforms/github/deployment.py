@@ -57,20 +57,33 @@ class GitHubDeployment:
                 except GitCommandError:
                     repo.git.checkout('--orphan', self.branch)
             
-            # Clear branch content (keep .git)
+            # Clear branch content (keep .git and other important files)
+            protected_items = {'.git', output_dir, '.gitignore', 'CNAME'}
+            
             for item in project_path.iterdir():
-                if item.name != '.git' and item.name != output_dir:
-                    if item.is_dir():
-                        shutil.rmtree(item)
-                    else:
-                        item.unlink()
+                if item.name not in protected_items:
+                    try:
+                        if item.is_dir():
+                            shutil.rmtree(item, ignore_errors=True)
+                        else:
+                            item.unlink(missing_ok=True)
+                    except (OSError, PermissionError) as e:
+                        self.logger.warning(f"Could not remove {item.name}: {e}")
+                        continue
             
             # Copy build output to root
             for item in output_path.iterdir():
-                if item.is_dir():
-                    shutil.copytree(item, project_path / item.name)
-                else:
-                    shutil.copy2(item, project_path / item.name)
+                dest_path = project_path / item.name
+                try:
+                    if item.is_dir():
+                        if dest_path.exists():
+                            shutil.rmtree(dest_path, ignore_errors=True)
+                        shutil.copytree(item, dest_path)
+                    else:
+                        shutil.copy2(item, dest_path)
+                except (OSError, PermissionError) as e:
+                    self.logger.warning(f"Could not copy {item.name}: {e}")
+                    continue
             
             # Add, commit and push
             repo.git.add('.')
