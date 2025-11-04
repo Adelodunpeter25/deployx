@@ -15,3 +15,5 @@ LICENSE
 
 # others
 .gitcli-config.json
+
+.deployx_token

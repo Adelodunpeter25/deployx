@@ -50,16 +50,20 @@ def init(ctx, path):
 def deploy(ctx, path, force, dry_run):
     """Deploy your project to the configured platform."""
     
+    # Check if config exists first (before async context)
+    from utils.config import Config
+    config = Config(path)
+    
+    if not config.exists():
+        from commands.interactive import interactive_command
+        info("🔧 No configuration found, starting interactive setup...")
+        # Call interactive synchronously, outside async context
+        cmd = BaseCommand("interactive")
+        success = cmd.handle_sync(lambda: interactive_command(path))
+        sys.exit(0 if success else 1)
+    
+    # Only use async context if config exists
     async def run_deploy():
-        # Check if config exists, if not start interactive mode
-        from utils.config import Config
-        config = Config(path)
-        
-        if not config.exists():
-            from commands.interactive import interactive_command
-            info("🔧 No configuration found, starting interactive setup...")
-            return interactive_command(path)
-        
         service = DeploymentService(path)
         success, message = await service.deploy(force=force, dry_run=dry_run)
         
@@ -70,6 +74,7 @@ def deploy(ctx, path, force, dry_run):
             error(f"❌ {message}")
             return False
     
+    deploy_cmd = BaseCommand("deploy")
     success = deploy_cmd.handle_async(run_deploy)
     sys.exit(0 if success else 1)
 

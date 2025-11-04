@@ -102,7 +102,38 @@ def deploy_command(project_path: str = ".", dry_run: bool = False) -> bool:
     
     if not valid:
         error(f"❌ Credential validation failed: {message}")
-        return False
+        
+        # Offer to reconfigure token for authentication issues
+        if "token" in message.lower() or "authentication" in message.lower():
+            try:
+                reconfigure = input("\n🔧 Would you like to reconfigure your GitHub token? (y/N): ").strip().lower()
+                if reconfigure in ['y', 'yes']:
+                    token = input("Enter your GitHub token: ").strip()
+                    if token:
+                        # Update environment variable for current session
+                        import os
+                        os.environ['GITHUB_TOKEN'] = token
+                        
+                        # Try validation again
+                        info("🔐 Validating new credentials...")
+                        with spinner("Checking authentication", platform_name):
+                            valid, message = platform.validate_credentials()
+                        
+                        if valid:
+                            success(f"✅ {message}")
+                        else:
+                            error(f"❌ New token validation failed: {message}")
+                            return False
+                    else:
+                        error("❌ No token provided")
+                        return False
+                else:
+                    return False
+            except KeyboardInterrupt:
+                error("\n❌ Configuration cancelled")
+                return False
+        else:
+            return False
     
     success(f"✅ {message}")
     

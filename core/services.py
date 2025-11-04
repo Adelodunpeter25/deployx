@@ -114,7 +114,44 @@ class DeploymentService:
             self.logger.info("Validating credentials")
             valid, message = await asyncio.to_thread(platform.validate_credentials)
             if not valid:
-                return False, f"Credential validation failed: {message}"
+                # Offer to reconfigure token for authentication issues
+                if "token" in message.lower() or "authentication" in message.lower() or "repository name not configured" in message.lower():
+                    try:
+                        print(f"\n❌ Credential validation failed: {message}")
+                        reconfigure = input("🔧 Would you like to reconfigure your GitHub token? (y/N): ").strip().lower()
+                        if reconfigure in ['y', 'yes']:
+                            token = input("Enter your GitHub token: ").strip()
+                            if token:
+                                # Update environment variable for current session
+                                import os
+                                os.environ['GITHUB_TOKEN'] = token
+                                
+                                # Save token to .deployx_token file
+                                token_file = self.project_path / '.deployx_token'
+                                try:
+                                    with open(token_file, 'w') as f:
+                                        f.write(token)
+                                    print("✅ Token saved to .deployx_token")
+                                except Exception as e:
+                                    print(f"⚠️ Could not save token file: {e}")
+                                
+                                # Recreate platform instance to pick up new token
+                                platform = get_platform(config.platform, config.get_platform_config())
+                                
+                                # Try validation again
+                                print("🔐 Validating new credentials...")
+                                valid, message = await asyncio.to_thread(platform.validate_credentials)
+                                
+                                if not valid:
+                                    return False, f"New token validation failed: {message}"
+                            else:
+                                return False, "No token provided"
+                        else:
+                            return False, f"Credential validation failed: {message}"
+                    except KeyboardInterrupt:
+                        return False, "Configuration cancelled"
+                else:
+                    return False, f"Credential validation failed: {message}"
             
             # Configure environment variables if platform supports it
             if hasattr(platform, 'set_environment_variables'):

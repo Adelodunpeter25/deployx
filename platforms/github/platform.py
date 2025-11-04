@@ -2,6 +2,7 @@
 GitHub Pages deployment platform implementation.
 """
 import os
+from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 from github import Github, GithubException
 import requests
@@ -23,12 +24,16 @@ class GitHubPlatform(BasePlatform, PlatformEnvInterface):
         self.repo_name = config.get('github', {}).get('repo')
         self.method = config.get('github', {}).get('method', 'branch')
         self.branch = config.get('github', {}).get('branch', 'gh-pages')
-        self.token = self._get_token()
         self.github_client = None
         self.repo_obj = None
         
-        # Initialize components
+        # Initialize CLI integration first (needed by _get_token)
         self.cli_integration = GitHubCLIIntegration()
+        
+        # Now get token (which uses cli_integration)
+        self.token = self._get_token()
+        
+        # Initialize other components
         self.auto_creation = GitHubAutoCreation(self.token) if self.token else None
         self.deployment = GitHubDeployment(self.repo_name, self.method, self.branch)
         self.env_management = None  # Initialized after validation
@@ -58,12 +63,22 @@ class GitHubPlatform(BasePlatform, PlatformEnvInterface):
         return self.env_management.delete_environment_variable(key)
     
     def _get_token(self) -> Optional[str]:
-        """Get GitHub token from CLI integration or environment."""
+        """Get GitHub token from CLI integration, file, or environment."""
         # Try CLI integration first
-        if self.cli_integration.is_authenticated():
+        if self.cli_integration.is_cli_available():
             token = self.cli_integration.get_token()
             if token:
                 return token
+        
+        # Try .deployx_token file
+        try:
+            token_file = Path('.deployx_token')
+            if token_file.exists():
+                token = token_file.read_text().strip()
+                if token:
+                    return token
+        except Exception:
+            pass
         
         # Fallback to environment variable
         return os.getenv('GITHUB_TOKEN')

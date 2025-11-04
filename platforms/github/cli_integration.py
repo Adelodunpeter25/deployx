@@ -40,6 +40,20 @@ class GitHubCLIIntegration:
             self.logger.error(f"Failed to get authenticated user: {e}")
         return None
     
+    def get_token(self) -> Optional[str]:
+        """Get GitHub token from CLI."""
+        try:
+            result = subprocess.run(
+                ["gh", "auth", "token"],
+                capture_output=True,
+                text=True
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+        except Exception as e:
+            self.logger.error(f"Failed to get token: {str(e)}")
+        return None
+    
     def create_repository(self, repo_name: str, is_private: bool = False) -> Tuple[bool, str]:
         """Create a GitHub repository using CLI."""
         try:

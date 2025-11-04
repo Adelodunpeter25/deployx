@@ -162,7 +162,7 @@ class DeployXConfig(BaseModel):
         platform_config = values.get(v)
         if platform_config is None:
             # Allow missing config for auto-configuration platforms
-            if v in ['render', 'vercel', 'netlify', 'railway']:
+            if v in ['github', 'render', 'vercel', 'netlify', 'railway']:
                 return v
             else:
                 raise ValueError(f"Configuration for platform '{v}' is required")
