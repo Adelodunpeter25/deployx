@@ -102,6 +102,99 @@ class VercelPlatform(BasePlatform):
         except Exception as e:
             return DeploymentResult(success=False, message=f"Deployment failed: {str(e)}")
     
+    def get_deployment_status(self) -> DeploymentStatus:
+        """Get deployment status from Vercel."""
+        try:
+            if self._has_vercel_cli():
+                return self._get_status_with_cli()
+            else:
+                return self._get_status_with_api()
+        except Exception as e:
+            return DeploymentStatus(
+                status="error", 
+                message=f"Status check failed: {str(e)}"
+            )
+    
+    def _get_status_with_cli(self) -> DeploymentStatus:
+        """Get status using Vercel CLI."""
+        try:
+            # Get deployments list
+            result = subprocess.run(
+                ["vercel", "ls", "--json"],
+                cwd=self.project_path,
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode == 0:
+                import json
+                deployments = json.loads(result.stdout)
+                
+                if deployments:
+                    latest = deployments[0]
+                    state = latest.get("state", "UNKNOWN").upper()
+                    
+                    status_map = {
+                        "READY": "ready",
+                        "BUILDING": "building", 
+                        "ERROR": "error",
+                        "CANCELED": "error"
+                    }
+                    
+                    return DeploymentStatus(
+                        status=status_map.get(state, "unknown"),
+                        url=f"https://{latest.get('url', '')}",
+                        last_updated=latest.get("created"),
+                        message=f"Vercel deployment {state.lower()}"
+                    )
+            
+            return DeploymentStatus(status="unknown", message="No deployments found")
+            
+        except Exception as e:
+            return DeploymentStatus(status="error", message=f"CLI status check failed: {str(e)}")
+    
+    def _get_status_with_api(self) -> DeploymentStatus:
+        """Get status using Vercel API."""
+        try:
+            if not self.token:
+                return DeploymentStatus(status="error", message="No Vercel token configured")
+            
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            # Get deployments for the project
+            response = requests.get(
+                "https://api.vercel.com/v6/deployments",
+                headers=headers,
+                params={"limit": 1}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                deployments = data.get("deployments", [])
+                
+                if deployments:
+                    deployment = deployments[0]
+                    state = deployment.get("state", "UNKNOWN").upper()
+                    
+                    status_map = {
+                        "READY": "ready",
+                        "BUILDING": "building",
+                        "ERROR": "error", 
+                        "CANCELED": "error"
+                    }
+                    
+                    return DeploymentStatus(
+                        status=status_map.get(state, "unknown"),
+                        url=f"https://{deployment.get('url', '')}",
+                        last_updated=deployment.get("createdAt"),
+                        message=f"Vercel deployment {state.lower()}"
+                    )
+            
+            return DeploymentStatus(status="unknown", message="No deployments found")
+            
+        except Exception as e:
+            return DeploymentStatus(status="error", message=f"API status check failed: {str(e)}")
+    
     def _has_vercel_cli(self) -> bool:
         """Check if Vercel CLI is available"""
         try:
@@ -208,9 +301,9 @@ class VercelPlatform(BasePlatform):
             return DeploymentStatus(status="unknown", message="No deployments found")
             
         except Exception as e:
-            return DeploymentStatus(status="error", message=f"Status check failed: {str(e)}")
+            return DeploymentStatus(status="error", message=f"API status check failed: {str(e)}")
     
     def get_url(self) -> Optional[str]:
         """Get deployment URL"""
-        status = self.get_status()
+        status = self.get_deployment_status()
         return status.url

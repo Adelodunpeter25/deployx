@@ -107,9 +107,9 @@ class RenderConfig(BaseModel):
     service identifier required for deployment operations.
     
     Attributes:
-        service_id: Render service identifier
+        service_id: Render service identifier (optional, auto-created if missing)
     """
-    service_id: str = Field(..., description="Render service ID")
+    service_id: Optional[str] = Field(None, description="Render service ID")
 
 class DeployXConfig(BaseModel):
     """
@@ -158,8 +158,14 @@ class DeployXConfig(BaseModel):
         Raises:
             ValueError: If platform config section is missing
         """
-        if v not in values or values.get(v) is None:
-            raise ValueError(f"Configuration for platform '{v}' is required")
+        # Skip validation if platform config doesn't exist yet (will be auto-created)
+        platform_config = values.get(v)
+        if platform_config is None:
+            # Allow missing config for auto-configuration platforms
+            if v in ['render', 'vercel', 'netlify', 'railway']:
+                return v
+            else:
+                raise ValueError(f"Configuration for platform '{v}' is required")
         return v
     
     def get_platform_config(self) -> Dict[str, Any]:

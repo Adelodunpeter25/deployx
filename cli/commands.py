@@ -51,6 +51,15 @@ def deploy(ctx, path, force, dry_run):
     """Deploy your project to the configured platform."""
     
     async def run_deploy():
+        # Check if config exists, if not start interactive mode
+        from utils.config import Config
+        config = Config(path)
+        
+        if not config.exists():
+            from commands.interactive import interactive_command
+            info("🔧 No configuration found, starting interactive setup...")
+            return interactive_command(path)
+        
         service = DeploymentService(path)
         success, message = await service.deploy(force=force, dry_run=dry_run)
         
