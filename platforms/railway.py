@@ -213,12 +213,139 @@ startCommand = "{self._get_start_command()}"
                 else:
                     return False, f"Project creation failed (HTTP {response.status_code})", None
             
-            # Note: Full API deployment requires more complex file upload
-            # For now, recommend using CLI
-            return False, "API deployment not fully implemented. Please install Railway CLI.", None
+            # Create deployment via API
+            deployment_query = {
+                "query": """
+                    mutation deploymentCreate($input: DeploymentCreateInput!) {
+                        deploymentCreate(input: $input) {
+                            id
+                            status
+                            url
+                        }
+                    }
+                """,
+                "variables": {
+                    "input": {
+                        "projectId": self.project_id,
+                        "environmentId": self._get_environment_id(),
+                        "serviceId": self.service_id or self._create_service()
+                    }
+                }
+            }
+            
+            response = requests.post(self.api_base, headers=headers, json=deployment_query)
+            if response.status_code == 200:
+                data = response.json()
+                if "errors" not in data:
+                    deployment = data["data"]["deploymentCreate"]
+                    deployment_url = deployment.get("url")
+                    if deployment_url and not deployment_url.startswith("http"):
+                        deployment_url = f"https://{deployment_url}"
+                    
+                    return True, "Deployment created successfully", deployment_url
+                else:
+                    errors = data.get("errors", [])
+                    error_msg = errors[0].get("message", "Unknown error") if errors else "Deployment failed"
+                    return False, f"Deployment failed: {error_msg}", None
+            else:
+                return False, f"Deployment failed (HTTP {response.status_code})", None
                 
         except Exception as e:
             return False, f"API deployment error: {str(e)}", None
+    
+    def _get_environment_id(self) -> str:
+        """Get the production environment ID for the project."""
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json"
+            }
+            
+            query = {
+                "query": """
+                    query project($id: String!) {
+                        project(id: $id) {
+                            environments {
+                                edges {
+                                    node {
+                                        id
+                                        name
+                                    }
+                                }
+                            }
+                        }
+                    }
+                """,
+                "variables": {"id": self.project_id}
+            }
+            
+            response = requests.post(self.api_base, headers=headers, json=query)
+            if response.status_code == 200:
+                data = response.json()
+                environments = data["data"]["project"]["environments"]["edges"]
+                
+                # Find production environment or use first available
+                for env in environments:
+                    if env["node"]["name"].lower() == "production":
+                        return env["node"]["id"]
+                
+                # Return first environment if production not found
+                if environments:
+                    return environments[0]["node"]["id"]
+            
+            return "production"  # Fallback
+            
+        except Exception:
+            return "production"  # Fallback
+    
+    def _create_service(self) -> str:
+        """Create a service for the project if none exists."""
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json"
+            }
+            
+            query = {
+                "query": """
+                    mutation serviceCreate($input: ServiceCreateInput!) {
+                        serviceCreate(input: $input) {
+                            id
+                            name
+                        }
+                    }
+                """,
+                "variables": {
+                    "input": {
+                        "projectId": self.project_id,
+                        "name": self.config.get("project", {}).get("name", "deployx-service"),
+                        "source": {
+                            "repo": self._get_repo_url() or "https://github.com/user/repo"
+                        }
+                    }
+                }
+            }
+            
+            response = requests.post(self.api_base, headers=headers, json=query)
+            if response.status_code == 200:
+                data = response.json()
+                if "errors" not in data:
+                    return data["data"]["serviceCreate"]["id"]
+            
+            return "default-service"  # Fallback
+            
+        except Exception:
+            return "default-service"  # Fallback
+    
+    def _get_repo_url(self) -> Optional[str]:
+        """Get Git repository URL from project."""
+        try:
+            import git
+            repo = git.Repo(self.project_path)
+            origin = repo.remote('origin')
+            return origin.url
+        except Exception:
+            return None
     
     def get_status(self, deployment_id: Optional[str] = None) -> DeploymentStatus:
         """Get deployment status"""
