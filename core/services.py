@@ -118,20 +118,25 @@ class DeploymentService:
                 if "token" in message.lower() or "authentication" in message.lower() or "repository name not configured" in message.lower():
                     try:
                         print(f"\n❌ Credential validation failed: {message}")
-                        reconfigure = input("🔧 Would you like to reconfigure your GitHub token? (y/N): ").strip().lower()
+                        
+                        # Suggest using auth setup command
+                        platform_name = config.platform.lower()
+                        print(f"💡 Tip: You can also run 'deployx auth setup {platform_name}' for guided setup")
+                        
+                        reconfigure = input(f"🔧 Would you like to reconfigure your {config.platform} token? (y/N): ").strip().lower()
                         if reconfigure in ['y', 'yes']:
-                            token = input("Enter your GitHub token: ").strip()
+                            token = input(f"Enter your {config.platform} token: ").strip()
                             if token:
                                 # Update environment variable for current session
                                 import os
-                                os.environ['GITHUB_TOKEN'] = token
+                                os.environ[f'{config.platform.upper()}_TOKEN'] = token
                                 
-                                # Save token to .deployx_token file
-                                token_file = self.project_path / '.deployx_token'
+                                # Save token to .deployx_*_token file
+                                token_file = self.project_path / f'.deployx_{platform_name}_token'
                                 try:
                                     with open(token_file, 'w') as f:
                                         f.write(token)
-                                    print("✅ Token saved to .deployx_token")
+                                    print(f"✅ Token saved to .deployx_{platform_name}_token")
                                 except Exception as e:
                                     print(f"⚠️ Could not save token file: {e}")
                                 

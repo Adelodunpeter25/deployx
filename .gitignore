@@ -10,8 +10,7 @@ wheels/
 .venv
 
 # docs
-CONTRIBUTING.md
-LICENSE
+LAUNCH_READINESS_PLAN.md
 
 # others
 .gitcli-config.json

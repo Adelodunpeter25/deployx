@@ -14,6 +14,7 @@ from commands.config import config_show_command, config_edit_command, config_val
 from commands.history import history_command
 from commands.rollback import rollback_command
 from commands.interactive import interactive_command
+from commands.auth import auth_status_command, auth_setup_command, auth_clear_command
 from utils.ui import header, error, info
 from platforms.factory import PlatformFactory
 
@@ -203,6 +204,38 @@ def rollback(ctx, path, target):
     
     cmd = BaseCommand("rollback")
     success = cmd.handle_sync(run_rollback)
+    sys.exit(0 if success else 1)
+
+@click.group(name='auth')
+@click.pass_context
+def auth(ctx):
+    """Manage authentication for deployment platforms."""
+    pass
+
+@auth.command(name='status')
+@click.pass_context
+def auth_status(ctx):
+    """Show authentication status for all platforms."""
+    cmd = BaseCommand("auth-status")
+    success = cmd.handle_sync(auth_status_command)
+    sys.exit(0 if success else 1)
+
+@auth.command(name='setup')
+@click.argument('platform')
+@click.pass_context
+def auth_setup(ctx, platform):
+    """Set up authentication for a specific platform."""
+    cmd = BaseCommand("auth-setup")
+    success = cmd.handle_sync(lambda: auth_setup_command(platform))
+    sys.exit(0 if success else 1)
+
+@auth.command(name='clear')
+@click.argument('platform')
+@click.pass_context
+def auth_clear(ctx, platform):
+    """Clear stored authentication for a platform."""
+    cmd = BaseCommand("auth-clear")
+    success = cmd.handle_sync(lambda: auth_clear_command(platform))
     sys.exit(0 if success else 1)
 
 @click.command(name='version')

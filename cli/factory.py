@@ -8,7 +8,7 @@ from core.logging import setup_logging, get_logger
 from utils.ui import info
 from .commands import (
     init, deploy, status, interactive, logs, config, 
-    history, rollback, version_cmd
+    history, rollback, auth, version_cmd
 )
 
 def create_cli(version: str):
@@ -62,6 +62,7 @@ def create_cli(version: str):
     cli.add_command(config)
     cli.add_command(history)
     cli.add_command(rollback)
+    cli.add_command(auth)
     cli.add_command(version_cmd)
     
     return cli

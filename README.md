@@ -11,19 +11,19 @@ No more memorizing different CLI tools, configuration formats, or deployment wor
 
 ## ✨ Features
 
-- 🎯 **Zero Configuration** - Auto-detects your project type and build settings
-- 🌐 **Multiple Platforms** - GitHub Pages, Vercel, Netlify, Railway, Render support
-- 🔧 **Framework Support** - React, Vue, Next.js, Angular, Django, Flask, FastAPI
-- 📦 **Package Manager Detection** - npm, yarn, pnpm, bun, pip, poetry, pipenv, uv
-- 🌍 **Environment Variables** - Auto-detect .env files and configure across platforms
-- ⚡ **Auto-Service Creation** - Automatically creates services on Render and other platforms
-- 🎨 **Beautiful CLI** - Rich terminal output with progress bars and spinners
-- 🔄 **CI/CD Ready** - Perfect for automated deployments
-- 📋 **Deployment Logs** - View and stream deployment logs in real-time
-- ⚙️ **Configuration Management** - Show, edit, and validate configurations
-- 📊 **Deployment History** - Track past deployments with timestamps and status
-- 🔙 **Rollback Support** - Revert to previous deployments with one command
-- 🔍 **Dry Run Mode** - Preview deployments without executing them
+- **Zero Configuration** - Auto-detects your project type and build settings
+- **Multiple Platforms** - GitHub Pages, Vercel, Netlify, Railway, Render support
+- **Framework Support** - React, Vue, Next.js, Angular, Django, Flask, FastAPI
+-**Package Manager Detection** - npm, yarn, pnpm, bun, pip, poetry, pipenv, uv
+- **Environment Variables** - Auto-detect .env files and configure across platforms
+-  **Auto-Service Creation** - Automatically creates services on Render and other platforms
+- **Beautiful CLI** - Rich terminal output with progress bars and spinners
+- **CI/CD Ready** - Perfect for automated deployments
+-**Deployment Logs** - View and stream deployment logs in real-time
+- **Configuration Management** - Show, edit, and validate configurations
+- **Deployment History** - Track past deployments with timestamps and status
+- **Rollback Support** - Revert to previous deployments with one command
+- **Dry Run Mode** - Preview deployments without executing them
 
 ## 🚀 Quick Start
 
@@ -63,8 +63,10 @@ pip uninstall deployx
 
 That's it! DeployX will:
 - Auto-detect your project type and framework
+- Use existing CLI authentication (GitHub CLI, Vercel CLI, etc.) if available
+- Guide you through token setup if needed with auto-opening browser pages
+- Auto-create repositories/projects/services as needed
 - Configure build settings automatically  
-- Set up the deployment platform
 - Handle environment variables from .env files
 - Deploy your project and provide a live URL
 
@@ -75,6 +77,13 @@ That's it! DeployX will:
 **Interactive setup for full control:**
 ```bash
 deployx interactive
+```
+
+**Authentication management:**
+```bash
+deployx auth status          # Check authentication status for all platforms
+deployx auth setup github    # Guided GitHub token setup
+deployx auth clear railway   # Clear stored Railway token
 ```
 
 **Step-by-step configuration:**
@@ -94,6 +103,39 @@ deployx deploy    # Auto-detects .env files and prompts for configuration
 deployx deploy --dry-run
 ```
 
+## 🔐 Authentication
+
+DeployX uses a **hybrid authentication system** that prioritizes convenience:
+
+### **Automatic CLI Detection**
+If you have platform CLIs installed, DeployX uses them automatically:
+- **GitHub CLI** (`gh`) - Uses existing authentication
+- **Vercel CLI** - Uses existing authentication  
+
+### **Smart Token Wizard**
+For platforms without CLI or when CLI isn't authenticated:
+```bash
+deployx auth setup github
+# 🎯 Setting up GitHub authentication
+# 📝 Create a token with 'repo' and 'workflow' scopes
+# 🔗 Open GitHub token page? (Y/n): y
+# ✅ Opened GitHub token page in browser
+# 📋 Paste your GitHub token: [secure input]
+# ✅ GitHub token saved
+# 🔐 Testing GitHub connection...
+# ✅ GitHub configured successfully!
+```
+
+### **Authentication Status**
+```bash
+deployx auth status
+# ✅ GitHub: Connected via CLI (username)
+# ✅ Vercel: Connected via CLI (username)
+# ✅ Railway: Connected via token file
+# ❌ Netlify: Not configured
+#    Run: deployx auth setup netlify
+```
+
 ## 🌍 Environment Variables
 
 DeployX automatically detects `.env` files and helps configure environment variables across platforms:
@@ -109,18 +151,9 @@ DeployX automatically detects `.env` files and helps configure environment varia
 📋 Variables: NODE_ENV, API_URL, DATABASE_URL, JWT_SECRET, etc.
 ❓ Configure environment variables for GitHub? (y/n)
 ```
-
-## ⚡ Auto-Service Creation
-
-For platforms like Render, DeployX automatically creates services when needed:
-
-- **Smart Detection**: Determines if you need a static site or web service
-- **Auto-Configuration**: Sets up build commands and publish paths
-- **Service Management**: Creates and configures services via platform APIs
-- **Zero Manual Setup**: No need to create services manually in dashboards
-
 ## 📚 Commands
 
+### **Core Commands**
 ```bash
 # Quick deployment
 deployx deploy                  # Auto-detect and deploy
@@ -130,8 +163,17 @@ deployx deploy --force          # Skip confirmations
 # Setup and configuration
 deployx init                    # Initialize configuration
 deployx interactive             # Guided setup and deployment
+```
 
-# Monitoring and management
+### **Authentication Commands**
+```bash
+deployx auth status             # Show authentication status for all platforms
+deployx auth setup <platform>   # Guided token setup (github, vercel, railway, etc.)
+deployx auth clear <platform>   # Clear stored authentication
+```
+
+### **Monitoring and Management**
+```bash
 deployx status                  # Check deployment status
 deployx logs --follow           # Stream deployment logs
 deployx history --limit 10      # View deployment history
@@ -174,8 +216,22 @@ github:
 
 ## 🔧 Platform Setup
 
-DeployX will prompt for tokens during setup. Get them from:
+### **Automatic Setup (Recommended)**
+If you have platform CLIs installed, DeployX works immediately:
+```bash
+# Install platform CLIs for zero-config experience
+gh auth login          # GitHub CLI
+vercel login           # Vercel CLI  
+railway login          # Railway CLI
+```
 
+### **Manual Token Setup**
+Use the guided wizard for platforms without CLI:
+```bash
+deployx auth setup <platform>
+```
+
+Or get tokens manually from:
 - **GitHub**: [Settings > Tokens](https://github.com/settings/tokens) (needs `repo`, `workflow`)
 - **Vercel**: [Account Settings](https://vercel.com/account/tokens)
 - **Netlify**: [User Settings](https://app.netlify.com/user/applications#personal-access-tokens)
