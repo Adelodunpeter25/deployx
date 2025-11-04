@@ -6,7 +6,7 @@ Provides common functionality for error handling, logging, and async execution.
 import sys
 import asyncio
 import traceback
-from typing import Callable, Any
+from typing import Callable
 import click
 from core.logging import get_logger
 from utils.ui import error

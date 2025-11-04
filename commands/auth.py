@@ -4,7 +4,7 @@ Authentication management commands for DeployX.
 import os
 import webbrowser
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 from utils.ui import header, success, error, info, warning
 from platforms.github.cli_integration import GitHubCLIIntegration
 from platforms.vercel.cli_integration import VercelCLIIntegration
@@ -219,7 +219,7 @@ def _setup_platform_auth(platform: str) -> bool:
             success(f"✅ {platform.title()} configured successfully!")
             return True
         else:
-            error(f"❌ Token validation failed")
+            error("❌ Token validation failed")
             # Remove invalid token
             token_file.unlink(missing_ok=True)
             return False

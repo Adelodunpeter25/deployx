@@ -1,13 +1,9 @@
 """
 Vercel API integration for direct deployment without CLI dependency.
 """
-import os
-import json
 import requests
-import tarfile
-import tempfile
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Optional, Tuple, List
 from core.logging import get_logger
 
 class VercelAPIIntegration:

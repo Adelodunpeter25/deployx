@@ -14,7 +14,6 @@ Features:
 """
 import logging
 import sys
-from pathlib import Path
 from typing import Optional
 
 def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> logging.Logger:

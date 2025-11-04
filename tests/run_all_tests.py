@@ -1,166 +1,172 @@
 #!/usr/bin/env python3
 """
-Test runner for DeployX - runs all test suites
+Comprehensive test runner for DeployX application.
 """
-
-import unittest
 import sys
+import subprocess
+import os
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-def run_all_tests():
-    """Run all test suites and generate report"""
-    
-    print("🧪 Running DeployX Test Suite")
+def run_tests():
+    """Run all tests with comprehensive coverage using uv."""
+    print("🧪 Running DeployX Test Suite (with uv)")
     print("=" * 50)
     
-    # Discover and run all tests
-    loader = unittest.TestLoader()
-    start_dir = Path(__file__).parent
-    suite = loader.discover(start_dir, pattern='test_*.py')
+    # Change to project root
+    project_root = Path(__file__).parent.parent
+    os.chdir(project_root)
     
-    # Run tests with detailed output
-    runner = unittest.TextTestRunner(
-        verbosity=2,
-        stream=sys.stdout,
-        descriptions=True,
-        failfast=False
-    )
-    
-    result = runner.run(suite)
-    
-    # Print summary
-    print("\n" + "=" * 50)
-    print("📊 Test Summary")
-    print(f"Tests run: {result.testsRun}")
-    print(f"Failures: {len(result.failures)}")
-    print(f"Errors: {len(result.errors)}")
-    print(f"Skipped: {len(result.skipped)}")
-    
-    if result.failures:
-        print("\n❌ Failures:")
-        for test, traceback in result.failures:
-            print(f"  - {test}")
-    
-    if result.errors:
-        print("\n💥 Errors:")
-        for test, traceback in result.errors:
-            print(f"  - {test}")
-    
-    if result.skipped:
-        print(f"\n⏭️  Skipped: {len(result.skipped)} tests (manual tests)")
-    
-    # Overall result
-    if result.wasSuccessful():
-        print("\n✅ All tests passed!")
-        return 0
-    else:
-        print("\n❌ Some tests failed!")
-        return 1
-
-def run_unit_tests_only():
-    """Run only unit tests (excluding integration and manual)"""
-    print("🔬 Running Unit Tests Only")
-    print("=" * 30)
-    
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    
-    # Add specific unit test modules
-    unit_test_modules = [
-        'test_config',
-        'test_project_detection',
-        'test_github_platform',
-        'test_deploy_command',
-        'test_detection'
+    # Test files to run
+    test_files = [
+        'tests/test_api_integrations.py',
+        'tests/test_full_application.py',
+        'tests/test_phase2_features.py'
     ]
     
-    for module in unit_test_modules:
-        try:
-            tests = loader.loadTestsFromName(module)
-            suite.addTests(tests)
-        except ImportError:
-            print(f"⚠️  Could not load {module}")
+    # Run each test file using uv
+    total_passed = 0
+    total_failed = 0
     
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-    
-    return 0 if result.wasSuccessful() else 1
-
-def run_integration_tests_only():
-    """Run only integration tests"""
-    print("🔗 Running Integration Tests Only")
-    print("=" * 35)
-    
-    loader = unittest.TestLoader()
-    suite = loader.loadTestsFromName('test_integration')
-    
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-    
-    return 0 if result.wasSuccessful() else 1
-
-def check_test_coverage():
-    """Check which components have tests"""
-    print("📋 Test Coverage Check")
-    print("=" * 25)
-    
-    components = {
-        'Configuration': 'test_config.py',
-        'Project Detection': 'test_project_detection.py', 
-        'GitHub Platform': 'test_github_platform.py',
-        'Deploy Command': 'test_deploy_command.py',
-        'Init Command': 'test_detection.py',
-        'Integration Tests': 'test_integration.py',
-        'Manual Tests': 'test_manual_scenarios.py'
-    }
-    
-    test_dir = Path(__file__).parent
-    
-    for component, test_file in components.items():
-        if (test_dir / test_file).exists():
-            print(f"✅ {component}")
+    for test_file in test_files:
+        if Path(test_file).exists():
+            print(f"\n📋 Running {test_file}")
+            print("-" * 30)
+            
+            try:
+                result = subprocess.run([
+                    'uv', 'run', 'pytest', 
+                    test_file, '-v', '--tb=short'
+                ], capture_output=True, text=True)
+                
+                print(result.stdout)
+                if result.stderr:
+                    print("STDERR:", result.stderr)
+                
+                if result.returncode == 0:
+                    print(f"✅ {test_file} - PASSED")
+                    total_passed += 1
+                else:
+                    print(f"❌ {test_file} - FAILED")
+                    total_failed += 1
+                    
+            except Exception as e:
+                print(f"❌ Error running {test_file}: {e}")
+                total_failed += 1
         else:
-            print(f"❌ {component} - Missing {test_file}")
+            print(f"⚠️ Test file not found: {test_file}")
     
-    print(f"\nTest files found: {len([f for f in test_dir.glob('test_*.py')])}")
+    # Summary
+    print("\n" + "=" * 50)
+    print("🎯 TEST SUMMARY")
+    print("=" * 50)
+    print(f"✅ Passed: {total_passed}")
+    print(f"❌ Failed: {total_failed}")
+    print(f"📊 Total: {total_passed + total_failed}")
+    
+    if total_failed == 0:
+        print("\n🎉 ALL TESTS PASSED!")
+        return True
+    else:
+        print(f"\n💥 {total_failed} TEST(S) FAILED!")
+        return False
+
+def check_test_environment():
+    """Check if test environment is properly set up with uv."""
+    print("🔍 Checking test environment (uv)...")
+    
+    # Check if uv is available
+    try:
+        result = subprocess.run(['uv', '--version'], capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"✅ uv available: {result.stdout.strip()}")
+        else:
+            print("❌ uv not found. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh")
+            return False
+    except FileNotFoundError:
+        print("❌ uv not found. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh")
+        return False
+    
+    # Check if pytest is available in uv environment
+    try:
+        result = subprocess.run(['uv', 'run', 'python', '-c', 'import pytest; print("pytest available")'], 
+                              capture_output=True, text=True)
+        if result.returncode == 0:
+            print("✅ pytest available in uv environment")
+        else:
+            print("❌ pytest not found. Install with: uv add pytest")
+            return False
+    except Exception as e:
+        print(f"❌ Error checking pytest: {e}")
+        return False
+    
+    # Check if project modules can be imported
+    try:
+        result = subprocess.run([
+            'uv', 'run', 'python', '-c', 
+            'from cli.factory import create_cli; from platforms.factory import PlatformFactory; print("Project modules importable")'
+        ], capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print("✅ Project modules importable")
+        else:
+            print(f"❌ Import error: {result.stderr}")
+            return False
+    except Exception as e:
+        print(f"❌ Error checking imports: {e}")
+        return False
+    
+    print("✅ Test environment ready")
+    return True
+
+def run_quick_test():
+    """Run a quick smoke test."""
+    print("🚀 Running quick smoke test...")
+    
+    try:
+        result = subprocess.run([
+            'uv', 'run', 'python', '-c', '''
+import sys
+sys.path.insert(0, ".")
+from cli.factory import create_cli
+from platforms.factory import PlatformFactory
+
+# Test CLI creation
+cli = create_cli("0.8.0")
+print("✅ CLI creation works")
+
+# Test platform factory
+platforms = PlatformFactory.get_available_platforms()
+print(f"✅ Platform factory works: {len(platforms)} platforms")
+
+# Test imports
+from commands.auth import auth_status_command
+print("✅ Auth commands import")
+
+print("🎉 Smoke test passed!")
+'''
+        ], capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print(result.stdout)
+            return True
+        else:
+            print(f"❌ Smoke test failed: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error running smoke test: {e}")
+        return False
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        command = sys.argv[1]
-        
-        if command == 'unit':
-            sys.exit(run_unit_tests_only())
-        elif command == 'integration':
-            sys.exit(run_integration_tests_only())
-        elif command == 'coverage':
-            check_test_coverage()
-            sys.exit(0)
-        elif command == 'help':
-            print("""
-DeployX Test Runner
-
-Usage:
-  python run_all_tests.py [command]
-
-Commands:
-  (no args)    Run all tests
-  unit         Run only unit tests
-  integration  Run only integration tests
-  coverage     Check test coverage
-  help         Show this help
-
-Examples:
-  python run_all_tests.py
-  python run_all_tests.py unit
-  python run_all_tests.py coverage
-            """)
-            sys.exit(0)
-        else:
-            print(f"Unknown command: {command}")
-            print("Use 'help' for available commands")
-            sys.exit(1)
+    if not check_test_environment():
+        print("\n💡 To set up the test environment:")
+        print("   uv add pytest")
+        print("   uv sync")
+        sys.exit(1)
+    
+    if len(sys.argv) > 1 and sys.argv[1] == '--quick':
+        success = run_quick_test()
     else:
-        sys.exit(run_all_tests())
+        success = run_tests()
+    
+    sys.exit(0 if success else 1)

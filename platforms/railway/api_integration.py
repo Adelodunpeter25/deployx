@@ -1,7 +1,6 @@
 """
 Railway GraphQL API integration for complete auto-setup.
 """
-import os
 import requests
 from typing import Dict, Optional, Tuple, List
 from core.logging import get_logger

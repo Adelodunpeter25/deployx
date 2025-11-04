@@ -4,7 +4,6 @@ Vercel deployment platform implementation.
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
-import requests
 
 from utils.errors import retry_with_backoff, handle_auth_error
 from ..base import BasePlatform, DeploymentResult, DeploymentStatus

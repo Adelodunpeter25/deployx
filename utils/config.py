@@ -8,7 +8,7 @@ project and platform-specific settings.
 
 import yaml
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from core.logging import get_logger
 
 CONFIG_FILE = "deployx.yml"

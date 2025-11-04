@@ -1,11 +1,8 @@
 """
 GitHub Pages deployment execution functionality.
 """
-import os
 import shutil
-import subprocess
 from pathlib import Path
-from typing import Optional
 from git import Repo, GitCommandError
 
 from core.logging import get_logger

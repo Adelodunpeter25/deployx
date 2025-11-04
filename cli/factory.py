@@ -4,7 +4,7 @@ CLI factory for building the main CLI application.
 Constructs the Click CLI with all commands and configuration.
 """
 import click
-from core.logging import setup_logging, get_logger
+from core.logging import setup_logging
 from utils.ui import info
 from .commands import (
     init, deploy, status, interactive, logs, config, 

@@ -92,10 +92,6 @@ class GitHubEnvManagement:
     
     def _encrypt_secret(self, secret_value: str, public_key: str) -> str:
         """Encrypt a secret value using the repository's public key."""
-        from cryptography.hazmat.primitives import serialization
-        from cryptography.hazmat.primitives.asymmetric import padding
-        from cryptography.hazmat.primitives import hashes
-        import base64
         
         # Load the public key
         public_key_obj = serialization.load_pem_public_key(public_key.encode())

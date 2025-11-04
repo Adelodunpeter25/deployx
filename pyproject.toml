@@ -67,5 +67,6 @@ packages = ["."]
 [dependency-groups]
 dev = [
     "pytest>=8.4.2",
+    "ruff>=0.14.1",
     "twine>=6.2.0",
 ]

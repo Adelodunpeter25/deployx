@@ -11,7 +11,6 @@ from utils.errors import retry_with_backoff, handle_auth_error, handle_github_ap
 from ..base import BasePlatform, DeploymentResult, DeploymentStatus
 from ..env_interface import PlatformEnvInterface
 from .cli_integration import GitHubCLIIntegration
-from .git_utils import GitUtils
 from .auto_creation import GitHubAutoCreation
 from .deployment import GitHubDeployment
 from .env_management import GitHubEnvManagement
@@ -21,9 +20,16 @@ class GitHubPlatform(BasePlatform, PlatformEnvInterface):
     
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
-        self.repo_name = config.get('github', {}).get('repo')
-        self.method = config.get('github', {}).get('method', 'branch')
-        self.branch = config.get('github', {}).get('branch', 'gh-pages')
+        
+        # Handle both full config and platform-specific config
+        if 'github' in config:
+            github_config = config.get('github', {})
+        else:
+            github_config = config
+            
+        self.repo_name = github_config.get('repo')
+        self.method = github_config.get('method', 'branch')
+        self.branch = github_config.get('branch', 'gh-pages')
         self.github_client = None
         self.repo_obj = None
         
@@ -70,9 +76,9 @@ class GitHubPlatform(BasePlatform, PlatformEnvInterface):
             if token:
                 return token
         
-        # Try .deployx_token file
+        # Try .deployx_github_token file
         try:
-            token_file = Path('.deployx_token')
+            token_file = Path('.deployx_github_token')
             if token_file.exists():
                 token = token_file.read_text().strip()
                 if token:

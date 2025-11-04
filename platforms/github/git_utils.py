@@ -2,7 +2,7 @@
 Git utilities for repository detection and management.
 """
 import subprocess
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 from pathlib import Path
 from core.logging import get_logger
 

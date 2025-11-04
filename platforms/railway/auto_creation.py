@@ -1,8 +1,7 @@
 """
 Railway project and service auto-creation functionality.
 """
-import os
-from typing import Tuple, Optional, Dict, Any
+from typing import Tuple, Optional, Dict
 from pathlib import Path
 from core.logging import get_logger
 from .api_integration import RailwayAPIIntegration

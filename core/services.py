@@ -254,6 +254,11 @@ class InitService:
         self.config = Config(str(self.project_path))
         self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
     
+    def initialize(self) -> Tuple[bool, str]:
+        """Synchronous wrapper for initialize_project."""
+        import asyncio
+        return asyncio.run(self.initialize_project())
+    
     async def initialize_project(self) -> Tuple[bool, str]:
         """
         Initialize project configuration.

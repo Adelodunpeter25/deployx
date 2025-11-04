@@ -4,10 +4,9 @@ Environment variable management for deployment platforms.
 Handles .env file detection, parsing, and user interaction for
 configuring environment variables across different platforms.
 """
-import os
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List
 import questionary
 from utils.ui import info, success, warning, error
 

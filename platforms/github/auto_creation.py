@@ -1,13 +1,11 @@
 """
 GitHub repository auto-creation functionality.
 """
-import os
 from typing import Tuple, Optional
 from github import Github, GithubException
-from pathlib import Path
 
 from core.logging import get_logger
-from utils.errors import handle_github_api_error, handle_auth_error
+from utils.errors import handle_github_api_error
 from .git_utils import GitUtils
 
 class GitHubAutoCreation:
@@ -90,24 +88,13 @@ class GitHubAutoCreation:
         except Exception as e:
             return False, f"Failed to create repository: {str(e)}", None
     
-    def _generate_suggested_name(self, project_name: str, username: str) -> str:
+    def _generate_suggested_name(self, project_name: str) -> str:
         """Generate a suggested repository name from project folder."""
         base_name = project_name.lower().replace(" ", "-").replace("_", "-")
-        
-        # Check if repo exists and suggest alternative if needed
-        try:
-            self.github_client.get_repo(f"{username}/{base_name}")
-            # If it exists, add suffix
-            counter = 1
-            while True:
-                new_name = f"{base_name}-{counter}"
-                try:
-                    self.github_client.get_repo(f"{username}/{new_name}")
-                    counter += 1
-                except:
-                    return new_name
-        except:
-            return base_name
+        # Remove invalid characters and clean up
+        base_name = "".join(c for c in base_name if c.isalnum() or c == "-")
+        base_name = base_name.strip("-")
+        return base_name or "my-project"
     
     def _prompt_for_repo_name(self, suggested_name: str) -> Optional[str]:
         """Prompt user for repository name with suggestion."""

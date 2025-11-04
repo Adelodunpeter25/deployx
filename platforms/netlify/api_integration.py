@@ -6,7 +6,7 @@ import requests
 import zipfile
 import tempfile
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Optional, Tuple, List
 from core.logging import get_logger
 
 class NetlifyAPIIntegration:
@@ -158,7 +158,7 @@ class NetlifyAPIIntegration:
             else:
                 return False, "error", None
                 
-        except Exception as e:
+        except Exception:
             return False, "error", None
     
     def _create_deployment_zip(self, build_path: Path) -> str:

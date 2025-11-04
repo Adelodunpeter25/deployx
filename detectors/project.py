@@ -344,6 +344,26 @@ def _detect_package_manager(path: Path) -> str:
         return "npm"
 
 
+class ProjectDetector:
+    """
+    Project detection class for compatibility with tests.
+    
+    Provides a class-based interface to the project detection functions.
+    """
+    
+    def __init__(self, project_path: str = "."):
+        self.project_path = project_path
+    
+    def detect(self) -> ProjectInfo:
+        """Detect project information."""
+        return detect_project(self.project_path)
+    
+    def get_summary(self) -> Dict[str, Any]:
+        """Get project summary as dictionary."""
+        info = self.detect()
+        return get_project_summary(info)
+
+
 def get_project_summary(info: ProjectInfo) -> Dict[str, Any]:
     """
     Convert ProjectInfo to dictionary format.

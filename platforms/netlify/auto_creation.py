@@ -1,7 +1,6 @@
 """
 Netlify site auto-creation functionality.
 """
-import os
 from typing import Tuple, Optional
 from pathlib import Path
 from core.logging import get_logger

@@ -4,7 +4,6 @@ GitHub CLI integration for authentication and repository management.
 import subprocess
 import json
 from typing import Optional, Tuple, Dict, Any
-from pathlib import Path
 from core.logging import get_logger
 
 class GitHubCLIIntegration:

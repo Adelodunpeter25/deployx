@@ -7,7 +7,7 @@ Handles token management, git detection, and platform-specific prompts.
 
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional
 import questionary
 from git import Repo, InvalidGitRepositoryError
 

@@ -4,9 +4,8 @@ Railway deployment platform implementation with complete auto-setup.
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
-import requests
 
-from utils.errors import retry_with_backoff, handle_auth_error, AuthenticationError
+from utils.errors import retry_with_backoff, handle_auth_error
 from ..base import BasePlatform, DeploymentResult, DeploymentStatus
 from .cli_integration import RailwayCLIIntegration
 from .api_integration import RailwayAPIIntegration

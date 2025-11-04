@@ -10,7 +10,7 @@ Example:
 """
 
 import questionary
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 
 from utils.ui import header, success, error, info, warning
 from utils.config import Config

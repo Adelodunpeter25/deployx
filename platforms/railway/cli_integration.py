@@ -3,7 +3,6 @@ Railway CLI integration for authentication and operations.
 """
 import subprocess
 import json
-import os
 from typing import Optional, Tuple, Dict, Any
 from pathlib import Path
 from core.logging import get_logger

@@ -5,7 +5,7 @@ Defines the interface for setting environment variables on different platforms
 and provides base functionality for environment variable management.
 """
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple
 from core.logging import get_logger
 
 class PlatformEnvInterface(ABC):

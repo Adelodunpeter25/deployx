@@ -7,7 +7,6 @@ import sys
 import click
 from pathlib import Path
 from .base import BaseCommand
-from core.logging import get_logger
 from core.services import DeploymentService, InitService, StatusService
 from commands.logs import logs_command
 from commands.config import config_show_command, config_edit_command, config_validate_command
